@@ -142,6 +142,13 @@ export function VisaoSegmentada() {
             <option value="saldo">Ordenar: maior saldo</option>
             <option value="desvio">Ordenar: maior desvio</option>
           </select>
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar…"
+            aria-label="Buscar"
+            className="w-40 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+          />
         </div>
       </div>
 
