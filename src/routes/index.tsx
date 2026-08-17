@@ -374,6 +374,9 @@ function Dashboard() {
           </Panel>
         </div>
 
+        <VisaoSegmentada />
+
+
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           <Panel title="Destaques e Alertas">
             <ul className="space-y-2.5 text-xs">
