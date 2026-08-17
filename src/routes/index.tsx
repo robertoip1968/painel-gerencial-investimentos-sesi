@@ -187,9 +187,14 @@ function DashboardInner() {
             <div>Última atualização:</div>
             <div className="text-sm text-navy-foreground">{dataset.linhas.toLocaleString("pt-BR")} lançamentos</div>
           </div>
-          <button className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
+          <button
+            type="button"
+            onClick={() => document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+          >
             <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
           </button>
+
         </div>
       </header>
 
