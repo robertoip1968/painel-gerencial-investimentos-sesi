@@ -166,6 +166,7 @@ function Dashboard() {
 }
 
 function DashboardInner() {
+  const navigate = useNavigate();
   const { dataset, isUpload, filtros, setFiltro, limparFiltros, temFiltro, receita } = useDataset();
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
