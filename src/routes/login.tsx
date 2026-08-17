@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Lock, LogIn, User } from "lucide-react";
 import { entrar, getSessao } from "@/lib/auth-local";
+import bgAsset from "@/assets/sesi-login.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -71,7 +72,7 @@ function LoginPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center bg-panel p-6 text-foreground">
+      <div className="flex items-center justify-center p-6 text-foreground">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 lg:hidden">
             <span className="text-2xl font-extrabold italic tracking-tight text-navy">SESI MT</span>
@@ -132,6 +133,7 @@ function LoginPage() {
             habilitado em breve.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
