@@ -475,29 +475,37 @@ function DashboardInner() {
             </ul>
           </Panel>
 
-          <Panel title="Comparativo Mesmo Período Ano Anterior">
+          <Panel title={`Receita x Despesa – ${ANO}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="py-2 text-left font-medium"></th>
-                  <th className="py-2 text-right font-medium">Jan - Jun/2025 (R$)</th>
-                  <th className="py-2 text-right font-medium">Jan - Jun/2026 (R$)</th>
-                  <th className="py-2 text-right font-medium">Variação</th>
+                  <th className="py-2 text-right font-medium">Previsto</th>
+                  <th className="py-2 text-right font-medium">Realizado</th>
+                  <th className="py-2 text-right font-medium">% Exec.</th>
                 </tr>
               </thead>
               <tbody>
-                {comparativo.map((c) => (
+                {[
+                  { linha: "Receita", p: receita.previsto, r: receita.realizado },
+                  { linha: "Despesa", p: dataset.previsto, r: dataset.realizado },
+                  {
+                    linha: "Resultado",
+                    p: receita.previsto - dataset.previsto,
+                    r: receita.realizado - dataset.realizado,
+                  },
+                ].map((c) => (
                   <tr key={c.linha} className="border-b border-border/60">
                     <td className="py-2">{c.linha}</td>
-                    <td className="py-2 text-right tabular-nums">{c.a2025}</td>
-                    <td className="py-2 text-right tabular-nums">{c.a2026}</td>
+                    <td className="py-2 text-right tabular-nums">{mi(c.p)}</td>
+                    <td className="py-2 text-right tabular-nums">{mi(c.r)}</td>
                     <td className="py-2 text-right tabular-nums">
                       <span className="inline-flex items-center gap-1">
-                        {c.var}
-                        {c.dir === "up" ? (
+                        {pctFmt(c.r, c.p)}
+                        {c.r >= 0 ? (
                           <ArrowUp className="size-3.5 text-ok" />
                         ) : (
-                          <MinusCircle className="size-3.5 text-muted-foreground" />
+                          <MinusCircle className="size-3.5 text-crit" />
                         )}
                       </span>
                     </td>
