@@ -199,7 +199,7 @@ function DashboardInner() {
       </header>
 
       <main className="space-y-4 p-4 sm:p-6">
-        <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
+        <div id="filtros" className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
           <Filtro label="Ano" value={String(ANO)} options={[{ value: String(ANO), label: String(ANO) }]} />
           <Filtro
             label="Mês inicial"
