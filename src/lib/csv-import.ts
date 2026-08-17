@@ -19,6 +19,7 @@ export type Dataset = {
   previsto: number;
   comprometido: number;
   realizado: number;
+  mensal?: { mes: number; previsto: number; realizado: number }[];
 };
 
 const ALIASES: Record<keyof RawRow, string[]> = {
