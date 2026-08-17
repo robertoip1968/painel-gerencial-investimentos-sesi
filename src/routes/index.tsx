@@ -162,8 +162,8 @@ function DashboardInner() {
 
       <main className="space-y-4 p-4 sm:p-6">
         <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-7">
-          <Filtro label="Ano" value="2026" />
-          <Filtro label="Período" value="Jan - Jun" />
+          <Filtro label="Ano" value={String(ANO)} />
+          <Filtro label="Período" value={periodo} />
           <Filtro label="Área / Gerência" value="Todos" />
           <Filtro label="Centro de Custo" value="Todos" />
           <Filtro label="Conta Contábil" value="Todos" />
