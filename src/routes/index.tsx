@@ -450,13 +450,13 @@ function DashboardInner() {
               <li className="flex gap-2">
                 <span className="mt-1 size-2.5 shrink-0 rounded-full bg-crit" />
                 <span>
-                  <strong>{risco[2].qtd}</strong> Centros de Custo em situação crítica ({risco[2].valor} previstos).
+                  <strong>{risco[2]!.qtd}</strong> Centros de Custo em situação crítica ({risco[2]!.valor} previstos).
                 </span>
               </li>
               <li className="flex gap-2">
                 <MinusCircle className="mt-px size-3.5 shrink-0 text-crit" />
                 <span>
-                  <strong>{risco[3].qtd}</strong> Itens de investimento sem execução até o momento.
+                  <strong>{risco[3]!.qtd}</strong> Itens de investimento sem execução até o momento.
                 </span>
               </li>
               <li className="flex gap-2">
