@@ -145,7 +145,7 @@ function DashboardInner() {
               Painel Gerencial de Investimentos – SESI MT
             </h1>
             <p className="text-sm text-navy-foreground/70">
-              Visão Executiva – Janeiro a Junho/2026
+              Visão Executiva – {periodo}/{ANO} • {isUpload ? dataset.fileName : "Base SHIFT 2026"}
             </p>
           </div>
         </div>
