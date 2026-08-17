@@ -38,9 +38,16 @@ const dotClass = {
   none: "bg-muted-foreground",
 } as const;
 
+const riscoLabel = {
+  ok: "Em dia",
+  warn: "Atenção",
+  crit: "Crítico",
+  semexec: "Sem execução",
+} as const;
+
 export function VisaoSegmentada() {
   const mounted = useMounted();
-  const { dataset } = useDataset();
+  const { dataset, risco, setRisco } = useDataset();
   const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
   const [busca, setBusca] = useState("");
