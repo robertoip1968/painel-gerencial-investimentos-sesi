@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowDownRight, ArrowUpRight, Layers, ListTree, Wallet } from "lucide-react";
-import { brl, META_EXEC_PCT, segCentroCusto, segConta, segItem, type SegRow } from "@/lib/dashboard-data";
+import { brl, type SegRow } from "@/lib/dashboard-data";
 import { useDataset } from "@/lib/dataset-store";
+import { MESES, mesBase } from "@/lib/real-data";
 
 type Ordem = "previsto" | "saldo" | "desvio";
 
@@ -14,12 +15,19 @@ function useMounted() {
   return m;
 }
 
-function derive(r: SegRow) {
+function derive(r: SegRow, meta: number) {
   const saldo = r.previsto - r.realizado;
   const disponivel = r.previsto - r.comprometido - r.realizado;
   const execPct = r.previsto > 0 ? (r.realizado / r.previsto) * 100 : 0;
-  const desvio = execPct - META_EXEC_PCT; // p.p. contra a meta do período
-  const situacao = r.previsto === 0 ? "none" : execPct >= 40 ? "ok" : execPct >= 20 ? "warn" : "crit";
+  const desvio = execPct - meta; // p.p. contra a meta linear do período
+  const situacao =
+    r.previsto === 0
+      ? "none"
+      : execPct >= meta * 0.9
+        ? "ok"
+        : execPct >= meta * 0.6
+          ? "warn"
+          : "crit";
   return { ...r, saldo, disponivel, execPct, desvio, situacao };
 }
 
