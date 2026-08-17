@@ -108,6 +108,16 @@ function Filtro({ label, value }: { label: string; value: string }) {
 
 function Dashboard() {
   return (
+    <DatasetProvider>
+      <DashboardInner />
+    </DatasetProvider>
+  );
+}
+
+function DashboardInner() {
+  const { dataset } = useDataset();
+  const kpis = dataset ? kpisFromDataset(dataset) : kpisDemo;
+  return (
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
         <div className="flex items-center gap-4">
