@@ -82,17 +82,25 @@ export function VisaoSegmentada() {
     [dataset],
   );
 
-  const ativa = dimensoes.find((d) => d.id === dim)!;
+  const dimEfetiva = risco ? (risco === "semexec" ? "item" : "cc") : dim;
+  const ativa = dimensoes.find((d) => d.id === dimEfetiva)!;
 
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase();
     const d = ativa.rows
       .filter((r) => !q || r.nome.toLowerCase().includes(q) || r.grupo.toLowerCase().includes(q))
-      .map((r) => derive(r, META_EXEC_PCT));
+      .map((r) => derive(r, META_EXEC_PCT))
+      .filter((r) =>
+        !risco
+          ? true
+          : risco === "semexec"
+            ? r.previsto > 0 && r.realizado === 0
+            : r.situacao === risco,
+      );
     return [...d].sort((a, b) =>
       ordem === "previsto" ? b.previsto - a.previsto : ordem === "saldo" ? b.saldo - a.saldo : a.desvio - b.desvio,
     );
-  }, [ativa, ordem, busca, META_EXEC_PCT]);
+  }, [ativa, ordem, busca, META_EXEC_PCT, risco]);
 
   const visiveis = rows.slice(0, 25);
 
