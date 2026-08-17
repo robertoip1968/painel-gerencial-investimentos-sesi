@@ -246,20 +246,20 @@ function DashboardInner() {
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Panel title="Execução do 1º Semestre 2026" className="xl:col-span-3">
+          <Panel title={`Execução ${periodo}/${ANO}`} className="xl:col-span-3">
             <div className="relative">
-              <ExecucaoDonut />
+              <ExecucaoDonut pct={execPct} />
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-navy">22,19%</span>
+                <span className="text-2xl font-bold text-navy">{pctFmt(dataset.realizado, dataset.previsto)}</span>
                 <span className="text-xs text-muted-foreground">do orçamento anual</span>
               </div>
             </div>
             <div className="mt-3 rounded-md bg-muted px-4 py-3 text-center">
-              <p className="text-lg font-bold text-navy">R$ 11,70 mi</p>
+              <p className="text-lg font-bold text-navy">{mi(dataset.realizado)}</p>
               <p className="text-xs text-muted-foreground">Realizado no período</p>
             </div>
             <div className="mt-3 text-center text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">R$ 52,73 mi</p>
+              <p className="font-semibold text-foreground">{mi(dataset.previsto)}</p>
               <p>Orçamento anual</p>
             </div>
           </Panel>
