@@ -528,6 +528,10 @@ function DashboardInner() {
 
         <VisaoSegmentada />
 
+        <LancamentosConta />
+
+
+
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           <Panel title="Destaques e Alertas">
