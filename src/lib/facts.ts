@@ -131,3 +131,39 @@ export function receitaFiltrada(f: Filtros) {
   const d = build(base.receita, f, base.fileName);
   return { previsto: d.previsto, realizado: d.realizado, linhas: d.linhas };
 }
+
+export type Lancamento = {
+  mes: number;
+  cc: string;
+  item: string;
+  conta: string;
+  linhas: number;
+  previsto: number;
+  realizado: number;
+};
+
+/** Lançamentos (nível mais detalhado disponível na planilha: mês x centro de custo x item x conta). */
+export function lancamentosFiltrados(f: Filtros): Lancamento[] {
+  const b = base.despesa;
+  const ccIdx = idxOf(base.cc, f.cc);
+  const itemIdx = idxOf(base.item, f.item);
+  const contaIdx = idxOf(base.conta, f.conta);
+  const out: Lancamento[] = [];
+  for (let i = 0; i < b.n; i++) {
+    const m = b.mes[i]!;
+    if (m < f.mesIni || m > f.mesFim) continue;
+    if (ccIdx >= 0 && b.cc[i] !== ccIdx) continue;
+    if (itemIdx >= 0 && b.item[i] !== itemIdx) continue;
+    if (contaIdx >= 0 && b.conta[i] !== contaIdx) continue;
+    out.push({
+      mes: m,
+      cc: base.cc[b.cc[i]!]!,
+      item: base.item[b.item[i]!]!,
+      conta: base.conta[b.conta[i]!]!,
+      linhas: b.linhas[i]!,
+      previsto: b.previsto[i]!,
+      realizado: b.realizado[i]!,
+    });
+  }
+  return out.sort((a, x) => x.realizado - a.realizado || x.previsto - a.previsto);
+}
