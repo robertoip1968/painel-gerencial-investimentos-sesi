@@ -121,8 +121,19 @@ function Dashboard() {
 }
 
 function DashboardInner() {
-  const { dataset } = useDataset();
-  const kpis = dataset ? kpisFromDataset(dataset) : kpisDemo;
+  const { dataset, isUpload } = useDataset();
+  const kpis = kpisFromDataset(dataset);
+  const mb = mesBase(dataset);
+  const periodo = `${MESES[0]} - ${MESES[mb - 1]}`;
+  const serie = serieAcumulada(dataset);
+  const contas = contasPct(dataset);
+  const cc = centrosTop(dataset);
+  const saldos = maioresSaldos(dataset);
+  const risco = riscoResumo(dataset);
+  const respostas = respostasFrom(dataset);
+  const { media, necessario } = ritmos(dataset);
+  const execPct = dataset.previsto > 0 ? (dataset.realizado / dataset.previsto) * 100 : 0;
+  const saldoTop = saldos.reduce((a, s) => a + s.saldo, 0);
   return (
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
