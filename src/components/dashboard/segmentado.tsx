@@ -217,7 +217,7 @@ export function VisaoSegmentada() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {visiveis.map((r) => (
                 <tr key={r.nome} className="border-b border-border/60">
                   <td className="py-1.5">
                     <span className="block leading-tight">{r.nome}</span>
