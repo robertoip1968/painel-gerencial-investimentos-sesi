@@ -44,6 +44,7 @@ export function ExecucaoLineChart() {
           wrapperStyle={{ fontSize: 12 }}
         />
         <Line
+          isAnimationActive={false}
           type="monotone"
           dataKey="previsto"
           name="Previsto Acumulado"
@@ -53,6 +54,7 @@ export function ExecucaoLineChart() {
           dot={false}
         />
         <Line
+          isAnimationActive={false}
           type="monotone"
           dataKey="realizado"
           name="Realizado Acumulado"
@@ -62,6 +64,7 @@ export function ExecucaoLineChart() {
           connectNulls={false}
         />
         <Line
+          isAnimationActive={false}
           type="monotone"
           dataKey="forecast"
           name="Forecast Acumulado"
@@ -94,7 +97,7 @@ export function ContasDonut() {
   return (
     <ResponsiveContainer width="100%" height={230}>
       <PieChart>
-        <Pie data={data} dataKey="pct" innerRadius={52} outerRadius={92} paddingAngle={1}>
+        <Pie isAnimationActive={false} data={data} dataKey="pct" innerRadius={52} outerRadius={92} paddingAngle={1}>
           {data.map((_, i) => (
             <Cell key={i} fill={palette[i % palette.length]} stroke="var(--card)" />
           ))}
@@ -122,6 +125,7 @@ export function ExecucaoDonut() {
     <ResponsiveContainer width="100%" height={200}>
       <PieChart>
         <Pie
+          isAnimationActive={false}
           data={data}
           dataKey="value"
           innerRadius={62}
