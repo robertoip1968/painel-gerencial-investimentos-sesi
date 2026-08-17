@@ -35,12 +35,13 @@ import {
   mesBase,
   mi,
   pctFmt,
-  receita,
   respostasFrom,
   riscoResumo,
   ritmos,
   serieAcumulada,
 } from "@/lib/real-data";
+import { TODOS, opcoes, type Filtros } from "@/lib/facts";
+
 
 
 export const Route = createFileRoute("/")({
@@ -99,17 +100,48 @@ function Panel({
   );
 }
 
-function Filtro({ label, value }: { label: string; value: string }) {
+function Filtro({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onChange?: (v: string) => void;
+  options: { value: string; label: string }[];
+  disabled?: boolean;
+}) {
   return (
     <div className="min-w-0">
       <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
-      <div className="mt-1 flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground">
-        <span className="truncate">{value}</span>
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      <div className="relative mt-1">
+        <select
+          value={value}
+          disabled={disabled || !onChange}
+          onChange={(e) => onChange?.(e.target.value)}
+          aria-label={label}
+          className="w-full appearance-none truncate rounded-md border border-border bg-background px-3 py-1.5 pr-8 text-sm text-foreground disabled:opacity-70"
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       </div>
     </div>
   );
 }
+
+const mesOpts = MESES.map((m, i) => ({ value: String(i + 1), label: m }));
+const listOpts = (l: string[], todos: string) => [
+  { value: TODOS, label: todos },
+  ...l.map((n) => ({ value: n, label: n })),
+];
+
 
 function Dashboard() {
   return (
@@ -120,10 +152,12 @@ function Dashboard() {
 }
 
 function DashboardInner() {
-  const { dataset, isUpload } = useDataset();
+  const { dataset, isUpload, filtros, setFiltro, limparFiltros, temFiltro, receita } = useDataset();
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
-  const periodo = `${MESES[0]} - ${MESES[mb - 1]}`;
+  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
+  const num = (k: keyof Filtros) => (v: string) => setFiltro(k as "mesIni", Number(v));
+
   const serie = serieAcumulada(dataset);
   const contas = contasPct(dataset);
   const cc = centrosTop(dataset);
@@ -153,24 +187,75 @@ function DashboardInner() {
             <div>Última atualização:</div>
             <div className="text-sm text-navy-foreground">{dataset.linhas.toLocaleString("pt-BR")} lançamentos</div>
           </div>
-          <button className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
+          <button
+            type="button"
+            onClick={() => document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+          >
             <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
           </button>
+
         </div>
       </header>
 
       <main className="space-y-4 p-4 sm:p-6">
-        <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-7">
-          <Filtro label="Ano" value={String(ANO)} />
-          <Filtro label="Período" value={periodo} />
-          <Filtro label="Área / Gerência" value="Todos" />
-          <Filtro label="Centro de Custo" value="Todos" />
-          <Filtro label="Conta Contábil" value="Todos" />
-          <Filtro label="Unidade" value="Todas" />
-          <button className="flex items-center justify-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
-            <RotateCcw className="size-4" /> Limpar filtros
-          </button>
+        <div id="filtros" className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
+          <Filtro label="Ano" value={String(ANO)} options={[{ value: String(ANO), label: String(ANO) }]} />
+          <Filtro
+            label="Mês inicial"
+            value={String(filtros.mesIni)}
+            onChange={num("mesIni")}
+            options={mesOpts}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Mês final"
+            value={String(filtros.mesFim)}
+            onChange={num("mesFim")}
+            options={mesOpts}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Centro de Custo"
+            value={filtros.cc}
+            onChange={(v) => setFiltro("cc", v)}
+            options={listOpts(opcoes.cc, "Todos")}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Item Contábil"
+            value={filtros.item}
+            onChange={(v) => setFiltro("item", v)}
+            options={listOpts(opcoes.item, "Todos")}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Conta Contábil"
+            value={filtros.conta}
+            onChange={(v) => setFiltro("conta", v)}
+            options={listOpts(opcoes.conta, "Todas")}
+            disabled={isUpload}
+          />
+          <div className="flex items-center gap-3 sm:col-span-3 lg:col-span-6">
+            <button
+              type="button"
+              onClick={limparFiltros}
+              disabled={isUpload || !temFiltro}
+              className="flex items-center justify-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-50"
+            >
+              <RotateCcw className="size-4" /> Limpar filtros
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {isUpload
+                ? "Filtros indisponíveis para CSV enviado."
+                : temFiltro
+                  ? `Filtro ativo • ${dataset.linhas.toLocaleString("pt-BR")} lançamentos`
+                  : "Nenhum filtro aplicado."}
+            </span>
+          </div>
         </div>
+
+
 
         <CsvUpload />
 
