@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
+import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
   ArrowUp,
@@ -145,6 +148,16 @@ const listOpts = (l: string[], todos: string) => [
 
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const [ok, setOk] = useState(false);
+
+  useEffect(() => {
+    if (getSessao()) setOk(true);
+    else void navigate({ to: "/login", replace: true });
+  }, [navigate]);
+
+  if (!ok) return <div className="min-h-screen bg-panel" />;
+
   return (
     <DatasetProvider>
       <DashboardInner />
@@ -153,6 +166,7 @@ function Dashboard() {
 }
 
 function DashboardInner() {
+  const navigate = useNavigate();
   const { dataset, isUpload, filtros, setFiltro, limparFiltros, temFiltro, receita } = useDataset();
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
@@ -194,6 +208,16 @@ function DashboardInner() {
             className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
             <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              sair();
+              void navigate({ to: "/login", replace: true });
+            }}
+            className="flex items-center gap-2 rounded-md border border-navy-foreground/25 px-3 py-2 text-sm font-medium text-navy-foreground/80 transition-colors hover:bg-navy-foreground/10"
+          >
+            <LogOut className="size-4" /> Sair
           </button>
 
         </div>
