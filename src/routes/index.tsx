@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
+import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
   ArrowUp,
@@ -145,6 +148,16 @@ const listOpts = (l: string[], todos: string) => [
 
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const [ok, setOk] = useState(false);
+
+  useEffect(() => {
+    if (getSessao()) setOk(true);
+    else void navigate({ to: "/login", replace: true });
+  }, [navigate]);
+
+  if (!ok) return <div className="min-h-screen bg-panel" />;
+
   return (
     <DatasetProvider>
       <DashboardInner />
