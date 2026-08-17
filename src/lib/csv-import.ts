@@ -136,6 +136,7 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
       item: get(c, map.item),
       conta: get(c, map.conta),
       grupoCC: get(c, map.grupoCC),
+      mes: get(c, map.mes),
       previsto: parseNumber(get(c, map.previsto)),
       comprometido: parseNumber(get(c, map.comprometido)),
       realizado: parseNumber(get(c, map.realizado)),
