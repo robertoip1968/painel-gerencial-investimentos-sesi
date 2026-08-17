@@ -46,15 +46,16 @@ function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen bg-navy text-navy-foreground lg:grid-cols-2">
+    <div className="relative min-h-screen bg-navy text-navy-foreground">
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${bgAsset.url})` }}
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-0 bg-navy/80" aria-hidden />
+      <div className="relative grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{
-            background:
-              "radial-gradient(900px 420px at 15% 10%, var(--brand), transparent 65%), radial-gradient(700px 380px at 85% 90%, var(--brand), transparent 70%)",
-          }}
-        />
+
         <span className="relative text-4xl font-extrabold italic tracking-tight">SESI MT</span>
         <div className="relative max-w-md space-y-4">
           <h2 className="text-3xl font-bold uppercase leading-tight">
