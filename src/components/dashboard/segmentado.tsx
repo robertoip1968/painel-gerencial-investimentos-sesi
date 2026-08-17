@@ -268,8 +268,9 @@ export function VisaoSegmentada() {
             </tbody>
           </table>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Desvio = % executado menos a meta linear do período ({META_EXEC_PCT}% até Jun). Situação:
-            verde ≥ 40%, amarelo 20–40%, vermelho &lt; 20%.
+            Exibindo {visiveis.length} de {rows.length} registros. Desvio = % executado menos a meta
+            linear do período ({META_EXEC_PCT}% até {MESES[mb - 1]}). Situação: verde ≥ 90% da meta,
+            amarelo 60–90%, vermelho &lt; 60%.
           </p>
         </div>
       </div>
