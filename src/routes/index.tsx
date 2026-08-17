@@ -22,12 +22,15 @@ import {
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
+import { CsvUpload } from "@/components/dashboard/csv-upload";
+import { DatasetProvider, useDataset } from "@/lib/dataset-store";
+import { kpisFromDataset } from "@/lib/kpi-from-dataset";
 import {
   brl,
   centrosCusto,
   comparativo,
   contas,
-  kpis,
+  kpis as kpisDemo,
   maioresSaldos,
   respostasRapidas,
   risco,
