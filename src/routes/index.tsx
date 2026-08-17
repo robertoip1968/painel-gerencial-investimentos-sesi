@@ -313,7 +313,7 @@ function DashboardInner() {
                 ))}
               </ul>
             </div>
-            <p className="mt-3 text-sm font-semibold text-navy">Total: R$ 52,73 mi</p>
+            <p className="mt-3 text-sm font-semibold text-navy">Total: {mi(dataset.previsto)}</p>
           </Panel>
         </div>
 
