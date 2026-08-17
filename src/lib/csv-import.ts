@@ -109,8 +109,9 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
   const clean = text.replace(/^\uFEFF/, "");
   const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) throw new Error("Arquivo vazio ou sem linhas de dados.");
-  const delim = detectDelim(lines[0]);
-  const headers = splitLine(lines[0], delim);
+  const headerLine = lines[0] ?? "";
+  const delim = detectDelim(headerLine);
+  const headers = splitLine(headerLine, delim);
   const map = mapColumns(headers);
 
   if (map.previsto === undefined && map.realizado === undefined) {
