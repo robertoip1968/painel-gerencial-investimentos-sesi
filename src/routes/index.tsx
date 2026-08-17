@@ -283,7 +283,7 @@ function DashboardInner() {
           <Panel title="Distribuição do Orçamento por Conta Contábil" className="xl:col-span-3">
             <div className="flex flex-col items-center gap-3 sm:flex-row">
               <div className="w-full sm:w-[45%]">
-                <ContasDonut />
+                <ContasDonut contas={contas} />
               </div>
               <ul className="w-full space-y-1.5 text-[11px] sm:w-[55%]">
                 {contas.map((c, i) => (
