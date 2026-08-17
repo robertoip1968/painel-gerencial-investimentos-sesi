@@ -152,7 +152,7 @@ function DashboardInner() {
         <div className="flex items-center gap-4">
           <div className="text-right text-xs text-navy-foreground/70">
             <div>Última atualização:</div>
-            <div className="text-sm text-navy-foreground">13/08/2026 08:30</div>
+            <div className="text-sm text-navy-foreground">{dataset.linhas.toLocaleString("pt-BR")} lançamentos</div>
           </div>
           <button className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
             <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
@@ -451,26 +451,24 @@ function DashboardInner() {
               <li className="flex gap-2">
                 <span className="mt-1 size-2.5 shrink-0 rounded-full bg-crit" />
                 <span>
-                  <strong>9</strong> Centros de Custo com execução abaixo de 15% e saldo superior a
-                  R$ 1 milhão.
+                  <strong>{risco[2].qtd}</strong> Centros de Custo em situação crítica ({risco[2].valor} previstos).
                 </span>
               </li>
               <li className="flex gap-2">
                 <MinusCircle className="mt-px size-3.5 shrink-0 text-crit" />
                 <span>
-                  <strong>6</strong> Itens de investimento sem execução até o momento.
+                  <strong>{risco[3].qtd}</strong> Itens de investimento sem execução até o momento.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="mt-1 size-2.5 shrink-0 rounded-full bg-warn" />
                 <span>
-                  <strong>63%</strong> do saldo a executar está concentrado nos 8 maiores
-                  investimentos.
+                  <strong>{pctFmt(saldoTop, dataset.previsto - dataset.realizado)}</strong> do saldo a executar está concentrado nos 10 maiores itens.
                 </span>
               </li>
               <li className="flex gap-2">
                 <Info className="mt-px size-3.5 shrink-0 text-brand" />
-                <span>Ritmo médio necessário (Jul-Dez): R$ 6,84 mi/mês.</span>
+                <span>Ritmo médio necessário ({MESES[mb] ?? "—"}-{MESES[11]}): {mi(necessario)}/mês.</span>
               </li>
             </ul>
           </Panel>
@@ -521,7 +519,7 @@ function DashboardInner() {
                 <Database className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Fonte de dados:</p>
-                  <p className="text-muted-foreground">SHIFT – Gestão Corporativa</p>
+                  <p className="text-muted-foreground">{isUpload ? dataset.fileName : "SHIFT – Gestão Corporativa"}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -542,7 +540,7 @@ function DashboardInner() {
                 <CalendarDays className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Data base:</p>
-                  <p className="text-muted-foreground">Até 30/06/2026</p>
+                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{ANO}</p>
                 </div>
               </div>
             </div>
