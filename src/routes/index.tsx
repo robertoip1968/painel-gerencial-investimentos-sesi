@@ -23,6 +23,7 @@ import {
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import { CsvUpload } from "@/components/dashboard/csv-upload";
+import { LancamentosConta } from "@/components/dashboard/lancamentos";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
 import { brl } from "@/lib/dashboard-data";
@@ -527,6 +528,10 @@ function DashboardInner() {
         </div>
 
         <VisaoSegmentada />
+
+        <LancamentosConta />
+
+
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
