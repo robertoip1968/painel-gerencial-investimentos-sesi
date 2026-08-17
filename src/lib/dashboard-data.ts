@@ -217,3 +217,100 @@ export const comparativo = [
   { linha: "Realizado", a2025: "10.708.366", a2026: "11.701.010", var: "+9,27%", dir: "up" },
   { linha: "% Execução", a2025: "22,19%", a2026: "22,19%", var: "0,00 p.p.", dir: "flat" },
 ] as const;
+
+// ---------- Respostas rápidas (leitura executiva) ----------
+export const respostasRapidas = [
+  {
+    pergunta: "Quanto temos previsto?",
+    resposta: "R$ 52,73 mi",
+    detalhe: "Orçamento aprovado 2026",
+    tone: "brand" as const,
+  },
+  {
+    pergunta: "Quanto já realizamos?",
+    resposta: "R$ 11,70 mi",
+    detalhe: "22,19% do previsto (Jan-Jun)",
+    tone: "ok" as const,
+  },
+  {
+    pergunta: "Quanto falta executar?",
+    resposta: "R$ 41,03 mi",
+    detalhe: "77,81% em 6 meses restantes",
+    tone: "warn" as const,
+  },
+  {
+    pergunta: "Onde estão os maiores investimentos?",
+    resposta: "Construções em Andamento",
+    detalhe: "57,5% do orçamento • Sorriso, VG e Rondonópolis",
+    tone: "brand" as const,
+  },
+  {
+    pergunta: "Onde estão os principais desvios?",
+    resposta: "9 CC críticos • R$ 25,79 mi",
+    detalhe: "Execução < 15% • maior desvio: Alta Floresta (-25,7 p.p.)",
+    tone: "crit" as const,
+  },
+  {
+    pergunta: "Qual o ritmo de execução?",
+    resposta: "R$ 1,95 mi/mês",
+    detalhe: "Necessário Jul-Dez: R$ 6,84 mi/mês (3,5x)",
+    tone: "warn" as const,
+  },
+  {
+    pergunta: "Qual a tendência de encerramento?",
+    resposta: "R$ 45,80 mi (86,85%)",
+    detalhe: "Desvio projetado: - R$ 6,93 mi",
+    tone: "crit" as const,
+  },
+];
+
+// ---------- Visão segmentada ----------
+export type SegRow = {
+  nome: string;
+  grupo: string;
+  previsto: number;
+  comprometido: number;
+  realizado: number;
+};
+
+export const segCentroCusto: SegRow[] = [
+  { nome: "SESI Escola Várzea Grande", grupo: "Educação", previsto: 8921304, comprometido: 4120000, realizado: 2845632 },
+  { nome: "SESI Escola Rondonópolis", grupo: "Educação", previsto: 7845215, comprometido: 3150000, realizado: 1967819 },
+  { nome: "SESI Escola Sorriso", grupo: "Educação", previsto: 6620000, comprometido: 2480000, realizado: 1012450 },
+  { nome: "SESI Clínica SST Lucas do RV", grupo: "Saúde e Segurança", previsto: 4250000, comprometido: 1580000, realizado: 812300 },
+  { nome: "SESI Experience Rondonópolis", grupo: "Cultura e Lazer", previsto: 3980000, comprometido: 1890000, realizado: 1354776 },
+  { nome: "SESI Clube Cáceres", grupo: "Cultura e Lazer", previsto: 3215000, comprometido: 980000, realizado: 562211 },
+  { nome: "SESI Polo Alta Floresta", grupo: "Educação", previsto: 2560000, comprometido: 410000, realizado: 231895 },
+  { nome: "SESI Casa da Indústria Sinop", grupo: "Administrativo", previsto: 2250000, comprometido: 720000, realizado: 394143 },
+  { nome: "SESI Escola Cuiabá", grupo: "Educação", previsto: 1980000, comprometido: 890000, realizado: 523182 },
+  { nome: "Demais Centros de Custo", grupo: "Diversos", previsto: 11110744, comprometido: 2420000, realizado: 1996601 },
+];
+
+export const segItem: SegRow[] = [
+  { nome: "Construção SESI Escola Sorriso", grupo: "Construções em Andamento", previsto: 6100000, comprometido: 2300000, realizado: 1210000 },
+  { nome: "Ampliação SESI Escola Várzea Grande", grupo: "Construções em Andamento", previsto: 5600000, comprometido: 2600000, realizado: 1390000 },
+  { nome: "Construção Clínica SST Lucas do RV", grupo: "Construções em Andamento", previsto: 4100000, comprometido: 1500000, realizado: 900000 },
+  { nome: "Reforma SESI Escola Rondonópolis", grupo: "Benfeitorias em Imóveis", previsto: 3900000, comprometido: 1450000, realizado: 920000 },
+  { nome: "Centro de Eventos – Estrutura", grupo: "Construções em Andamento", previsto: 3200000, comprometido: 1100000, realizado: 750000 },
+  { nome: "Equipamentos de Informática", grupo: "Equip. de Informática", previsto: 6430000, comprometido: 2900000, realizado: 2180000 },
+  { nome: "Mobiliário SESI Escolas", grupo: "Mobiliário em Geral", previsto: 3060000, comprometido: 1350000, realizado: 1310000 },
+  { nome: "Equip. Médicos e Laboratoriais", grupo: "Equip. Médicos", previsto: 3640000, comprometido: 1420000, realizado: 1210000 },
+  { nome: "Comunicação e Telefonia", grupo: "Equip. de Comunicação", previsto: 1420000, comprometido: 520000, realizado: 440000 },
+  { nome: "Veículos Operacionais", grupo: "Veículos", previsto: 860000, comprometido: 0, realizado: 0 },
+];
+
+export const segConta: SegRow[] = [
+  { nome: "Construções em Andamento", grupo: "Imobilizado", previsto: 30320000, comprometido: 11200000, realizado: 5310000 },
+  { nome: "Equip. de Informática", grupo: "Imobilizado", previsto: 6430000, comprometido: 2900000, realizado: 2180000 },
+  { nome: "Máquinas e Equip. em Geral", grupo: "Imobilizado", previsto: 5695000, comprometido: 1900000, realizado: 1150000 },
+  { nome: "Equip. Méd., Cirúrg., Odont. e Laborat.", grupo: "Imobilizado", previsto: 3640000, comprometido: 1420000, realizado: 1210000 },
+  { nome: "Mobiliário em Geral", grupo: "Imobilizado", previsto: 3060000, comprometido: 1350000, realizado: 1310000 },
+  { nome: "Benfeitorias em Imóveis de Terceiros", grupo: "Imobilizado", previsto: 2162263, comprometido: 1150000, realizado: 100000 },
+  { nome: "Equip. de Comunicação", grupo: "Imobilizado", previsto: 1425000, comprometido: 520000, realizado: 441009 },
+  { nome: "Equip. Esportivos, Art. e Recreação", grupo: "Imobilizado", previsto: 0, comprometido: 0, realizado: 0 },
+  { nome: "Veículos", grupo: "Imobilizado", previsto: 0, comprometido: 0, realizado: 0 },
+  { nome: "Terrenos", grupo: "Imobilizado", previsto: 0, comprometido: 0, realizado: 0 },
+];
+
+/** meta esperada de execução até o mês base (Jun) = 50% do previsto */
+export const META_EXEC_PCT = 50;
