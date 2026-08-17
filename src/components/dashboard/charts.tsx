@@ -106,7 +106,7 @@ const palette = [
   "var(--muted-foreground)",
 ];
 
-export function ContasDonut() {
+export function ContasDonut({ contas }: { contas: { nome: string; pct: number }[] }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 230 }} />;
   const data = contas.filter((c) => c.pct > 0);
