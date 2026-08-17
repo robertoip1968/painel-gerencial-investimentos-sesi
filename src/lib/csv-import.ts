@@ -5,6 +5,7 @@ export type RawRow = {
   item: string;
   conta: string;
   grupoCC: string;
+  mes: string;
   previsto: number;
   comprometido: number;
   realizado: number;
