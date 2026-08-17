@@ -87,6 +87,11 @@ function mapColumns(headers: string[]) {
   const map: Partial<Record<keyof RawRow, number>> = {};
   (Object.keys(ALIASES) as (keyof RawRow)[]).forEach((key) => {
     let idx = nh.findIndex((h) => ALIASES[key].includes(h));
+    // prefere colunas de nome (nomeCentroCusto) em vez de códigos (codCentroCusto)
+    if (idx < 0)
+      idx = nh.findIndex((h) => h.startsWith("nome") && ALIASES[key].some((a) => h.includes(a)));
+    if (idx < 0)
+      idx = nh.findIndex((h) => !h.startsWith("cod") && ALIASES[key].some((a) => h.includes(a)));
     if (idx < 0) idx = nh.findIndex((h) => ALIASES[key].some((a) => h.includes(a)));
     if (idx >= 0) map[key] = idx;
   });
