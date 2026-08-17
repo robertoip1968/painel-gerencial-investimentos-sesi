@@ -194,17 +194,63 @@ function DashboardInner() {
       </header>
 
       <main className="space-y-4 p-4 sm:p-6">
-        <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-7">
-          <Filtro label="Ano" value={String(ANO)} />
-          <Filtro label="Período" value={periodo} />
-          <Filtro label="Área / Gerência" value="Todos" />
-          <Filtro label="Centro de Custo" value="Todos" />
-          <Filtro label="Conta Contábil" value="Todos" />
-          <Filtro label="Unidade" value="Todas" />
-          <button className="flex items-center justify-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
-            <RotateCcw className="size-4" /> Limpar filtros
-          </button>
+        <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
+          <Filtro label="Ano" value={String(ANO)} options={[{ value: String(ANO), label: String(ANO) }]} />
+          <Filtro
+            label="Mês inicial"
+            value={String(filtros.mesIni)}
+            onChange={num("mesIni")}
+            options={mesOpts}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Mês final"
+            value={String(filtros.mesFim)}
+            onChange={num("mesFim")}
+            options={mesOpts}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Centro de Custo"
+            value={filtros.cc}
+            onChange={(v) => setFiltro("cc", v)}
+            options={listOpts(opcoes.cc, "Todos")}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Item Contábil"
+            value={filtros.item}
+            onChange={(v) => setFiltro("item", v)}
+            options={listOpts(opcoes.item, "Todos")}
+            disabled={isUpload}
+          />
+          <Filtro
+            label="Conta Contábil"
+            value={filtros.conta}
+            onChange={(v) => setFiltro("conta", v)}
+            options={listOpts(opcoes.conta, "Todas")}
+            disabled={isUpload}
+          />
+          <div className="flex items-center gap-3 sm:col-span-3 lg:col-span-6">
+            <button
+              type="button"
+              onClick={limparFiltros}
+              disabled={isUpload || !temFiltro}
+              className="flex items-center justify-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-50"
+            >
+              <RotateCcw className="size-4" /> Limpar filtros
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {isUpload
+                ? "Filtros indisponíveis para CSV enviado."
+                : temFiltro
+                  ? `Filtro ativo • ${dataset.linhas.toLocaleString("pt-BR")} lançamentos`
+                  : "Nenhum filtro aplicado."}
+            </span>
+          </div>
         </div>
+
+
 
         <CsvUpload />
 
