@@ -152,12 +152,24 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
     { previsto: 0, comprometido: 0, realizado: 0 },
   );
 
+  const mensal = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, previsto: 0, realizado: 0 }));
+  let temMes = false;
+  for (const r of rows) {
+    const m = parseInt(r.mes, 10);
+    if (m >= 1 && m <= 12) {
+      temMes = true;
+      mensal[m - 1]!.previsto += r.previsto;
+      mensal[m - 1]!.realizado += r.realizado;
+    }
+  }
+
   return {
     fileName,
     linhas: rows.length,
     segCentroCusto: agrupar(rows, (r) => r.centroCusto, (r) => r.grupoCC),
     segItem: agrupar(rows, (r) => r.item || r.centroCusto, (r) => r.conta),
-    segConta: agrupar(rows, (r) => r.conta, () => "Imobilizado"),
+    segConta: agrupar(rows, (r) => r.conta, (r) => r.item || "Conta contábil"),
+    ...(temMes ? { mensal } : {}),
     ...totals,
   };
 }
