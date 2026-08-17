@@ -333,7 +333,7 @@ function DashboardInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {centrosCusto.map((r, i) => (
+                  {cc.linhas.map((r, i) => (
                     <tr key={r.cc} className="border-b border-border/60">
                       <td className="py-1.5 text-muted-foreground">{i + 1}</td>
                       <td className="py-1.5">{r.cc}</td>
@@ -351,10 +351,10 @@ function DashboardInner() {
                   <tr className="font-semibold text-navy">
                     <td className="py-2"></td>
                     <td className="py-2">TOTAL</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.previsto)}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.realizado)}</td>
-                    <td className="py-2 text-right tabular-nums">{totalCC.pct}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.saldo)}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.previsto)}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.realizado)}</td>
+                    <td className="py-2 text-right tabular-nums">{cc.total.pct}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.saldo)}</td>
                     <td className="py-2">
                       <span className="mx-auto block size-2.5 rounded-full bg-crit" />
                     </td>
@@ -376,7 +376,7 @@ function DashboardInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {maioresSaldos.map((r) => (
+                  {saldos.map((r) => (
                     <tr key={r.item} className="border-b border-border/60">
                       <td className="py-1.5">{r.item}</td>
                       <td className="py-1.5 text-muted-foreground">{r.cc}</td>
@@ -388,8 +388,8 @@ function DashboardInner() {
                     <td className="py-2" colSpan={2}>
                       TOTAL TOP 10
                     </td>
-                    <td className="py-2 text-right tabular-nums">24.690.000</td>
-                    <td className="py-2 text-right tabular-nums">60,2%</td>
+                    <td className="py-2 text-right tabular-nums">{brl(saldoTop)}</td>
+                    <td className="py-2 text-right tabular-nums">{pctFmt(saldoTop, dataset.previsto - dataset.realizado)}</td>
                   </tr>
                 </tbody>
               </table>
