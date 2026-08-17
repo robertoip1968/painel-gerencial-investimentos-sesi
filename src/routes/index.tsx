@@ -269,13 +269,13 @@ function DashboardInner() {
             hint="(acumulado)"
             className="xl:col-span-6"
           >
-            <ExecucaoLineChart />
+            <ExecucaoLineChart data={serie} />
             <div className="mt-2 inline-block rounded-md border border-border bg-muted/60 px-3 py-2 text-xs text-foreground">
               <p>
-                Ritmo necessário (Jul-Dez): <strong>R$ 6,84 mi/mês</strong>
+                Ritmo necessário ({MESES[mb] ?? "—"}-{MESES[11]}): <strong>{mi(necessario)}/mês</strong>
               </p>
               <p>
-                Média realizada (Jan-Jun): <strong>R$ 1,95 mi/mês</strong>
+                Média realizada ({MESES[0]}-{MESES[mb - 1]}): <strong>{mi(media)}/mês</strong>
               </p>
             </div>
           </Panel>
