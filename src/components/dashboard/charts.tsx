@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -13,9 +14,17 @@ import {
 } from "recharts";
 import { contas, execucaoMensal } from "@/lib/dashboard-data";
 
+function useMounted() {
+  const [m, setM] = useState(false);
+  useEffect(() => setM(true), []);
+  return m;
+}
+
 const axis = { fontSize: 11, fill: "var(--muted-foreground)" };
 
 export function ExecucaoLineChart() {
+  const mounted = useMounted();
+  if (!mounted) return <div style={{ height: 300 }} />;
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={execucaoMensal} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
@@ -93,6 +102,8 @@ const palette = [
 ];
 
 export function ContasDonut() {
+  const mounted = useMounted();
+  if (!mounted) return <div style={{ height: 230 }} />;
   const data = contas.filter((c) => c.pct > 0);
   return (
     <ResponsiveContainer width="100%" height={230}>
@@ -117,6 +128,8 @@ export function ContasDonut() {
 }
 
 export function ExecucaoDonut() {
+  const mounted = useMounted();
+  if (!mounted) return <div style={{ height: 200 }} />;
   const data = [
     { name: "Realizado", value: 22.19 },
     { name: "A executar", value: 77.81 },
