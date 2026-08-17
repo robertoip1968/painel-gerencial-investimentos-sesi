@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Lock, LogIn, User } from "lucide-react";
 import { entrar, getSessao } from "@/lib/auth-local";
+import bgAsset from "@/assets/sesi-login.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -46,15 +47,16 @@ function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen bg-navy text-navy-foreground lg:grid-cols-2">
+    <div className="relative min-h-screen bg-navy text-navy-foreground">
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${bgAsset.url})` }}
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-0 bg-navy/80" aria-hidden />
+      <div className="relative grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{
-            background:
-              "radial-gradient(900px 420px at 15% 10%, var(--brand), transparent 65%), radial-gradient(700px 380px at 85% 90%, var(--brand), transparent 70%)",
-          }}
-        />
+
         <span className="relative text-4xl font-extrabold italic tracking-tight">SESI MT</span>
         <div className="relative max-w-md space-y-4">
           <h2 className="text-3xl font-bold uppercase leading-tight">
@@ -70,7 +72,7 @@ function LoginPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center bg-panel p-6 text-foreground">
+      <div className="flex items-center justify-center p-6 text-foreground">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 lg:hidden">
             <span className="text-2xl font-extrabold italic tracking-tight text-navy">SESI MT</span>
@@ -131,6 +133,7 @@ function LoginPage() {
             habilitado em breve.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
