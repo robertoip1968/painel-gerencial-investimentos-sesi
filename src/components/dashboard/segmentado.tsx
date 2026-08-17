@@ -122,22 +122,33 @@ export function VisaoSegmentada() {
   }));
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <section id="segmentado" className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-navy">
+        <h2 className="flex flex-wrap items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-navy">
           Visão Segmentada
-          <span className="ml-1 font-normal normal-case text-muted-foreground">
+          <span className="font-normal normal-case text-muted-foreground">
             (direcionadores de leitura)
           </span>
+          {risco && (
+            <button
+              onClick={() => setRisco(null)}
+              className="inline-flex items-center gap-1 rounded-full border border-navy/30 bg-navy/5 px-2 py-0.5 text-[10px] font-semibold normal-case text-navy hover:bg-navy/10"
+            >
+              Risco: {riscoLabel[risco]} ✕
+            </button>
+          )}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-md border border-border p-0.5">
             {dimensoes.map((d) => (
               <button
                 key={d.id}
-                onClick={() => setDim(d.id)}
+                onClick={() => {
+                  setRisco(null);
+                  setDim(d.id);
+                }}
                 className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-                  dim === d.id
+                  dimEfetiva === d.id
                     ? "bg-navy text-navy-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
