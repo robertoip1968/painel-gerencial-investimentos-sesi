@@ -21,6 +21,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
+import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import {
   brl,
   centrosCusto,
@@ -28,9 +29,11 @@ import {
   contas,
   kpis,
   maioresSaldos,
+  respostasRapidas,
   risco,
   totalCC,
 } from "@/lib/dashboard-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
