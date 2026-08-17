@@ -43,6 +43,9 @@ export function VisaoSegmentada() {
   const { dataset } = useDataset();
   const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
+  const [busca, setBusca] = useState("");
+  const mb = mesBase(dataset);
+  const META_EXEC_PCT = Math.round((mb / 12) * 100);
 
   const dimensoes = useMemo(
     () =>
@@ -51,21 +54,21 @@ export function VisaoSegmentada() {
           id: "cc" as const,
           label: "Centro de Custo",
           icon: Layers,
-          rows: dataset?.segCentroCusto ?? segCentroCusto,
+          rows: dataset.segCentroCusto,
           colLabel: "Centro de Custo",
         },
         {
           id: "item" as const,
-          label: "Item de Investimento",
+          label: "Item Contábil",
           icon: ListTree,
-          rows: dataset?.segItem ?? segItem,
+          rows: dataset.segItem,
           colLabel: "Item",
         },
         {
           id: "conta" as const,
           label: "Conta Contábil",
           icon: Wallet,
-          rows: dataset?.segConta ?? segConta,
+          rows: dataset.segConta,
           colLabel: "Conta Contábil",
         },
       ],
@@ -75,11 +78,16 @@ export function VisaoSegmentada() {
   const ativa = dimensoes.find((d) => d.id === dim)!;
 
   const rows = useMemo(() => {
-    const d = ativa.rows.map(derive);
+    const q = busca.trim().toLowerCase();
+    const d = ativa.rows
+      .filter((r) => !q || r.nome.toLowerCase().includes(q) || r.grupo.toLowerCase().includes(q))
+      .map((r) => derive(r, META_EXEC_PCT));
     return [...d].sort((a, b) =>
       ordem === "previsto" ? b.previsto - a.previsto : ordem === "saldo" ? b.saldo - a.saldo : a.desvio - b.desvio,
     );
-  }, [ativa, ordem]);
+  }, [ativa, ordem, busca, META_EXEC_PCT]);
+
+  const visiveis = rows.slice(0, 25);
 
   const totais = rows.reduce(
     (acc, r) => ({
