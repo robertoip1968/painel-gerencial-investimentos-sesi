@@ -35,12 +35,13 @@ import {
   mesBase,
   mi,
   pctFmt,
-  receita,
   respostasFrom,
   riscoResumo,
   ritmos,
   serieAcumulada,
 } from "@/lib/real-data";
+import { TODOS, opcoes, type Filtros } from "@/lib/facts";
+
 
 
 export const Route = createFileRoute("/")({
