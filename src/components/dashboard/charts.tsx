@@ -12,8 +12,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { contas, execucaoMensal } from "@/lib/dashboard-data";
-
 function useMounted() {
   const [m, setM] = useState(false);
   useEffect(() => setM(true), []);
@@ -22,12 +20,19 @@ function useMounted() {
 
 const axis = { fontSize: 11, fill: "var(--muted-foreground)" };
 
-export function ExecucaoLineChart() {
+export type SerieItem = {
+  mes: string;
+  previsto: number;
+  realizado: number | null;
+  forecast: number | null;
+};
+
+export function ExecucaoLineChart({ data }: { data: SerieItem[] }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 300 }} />;
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={execucaoMensal} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
         <XAxis dataKey="mes" tick={axis} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
         <YAxis
