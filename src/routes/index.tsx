@@ -31,7 +31,6 @@ import {
   MESES,
   centrosTop,
   contasPct,
-  forecastAno,
   maioresSaldos,
   mesBase,
   mi,
