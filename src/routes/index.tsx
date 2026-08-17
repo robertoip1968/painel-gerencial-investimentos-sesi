@@ -529,10 +529,20 @@ function DashboardInner() {
                     Icon: Ban,
                   },
                 }[r.tone];
+                const alvo = r.tone === "neutral" ? "semexec" : r.tone;
                 return (
-                  <div
+                  <button
                     key={r.titulo}
-                    className={`rounded-md border ${tone.border} ${tone.bg} p-3 text-center`}
+                    type="button"
+                    onClick={() => {
+                      setRisco(riscoSel === alvo ? null : alvo);
+                      document
+                        .getElementById("segmentado")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className={`rounded-md border ${tone.border} ${tone.bg} p-3 text-center transition-shadow hover:shadow-md ${
+                      riscoSel === alvo ? "ring-2 ring-navy" : ""
+                    }`}
                   >
                     <p
                       className={`text-[11px] font-bold uppercase tracking-wide ${tone.text}`}
