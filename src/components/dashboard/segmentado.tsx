@@ -32,8 +32,37 @@ const dotClass = {
 
 export function VisaoSegmentada() {
   const mounted = useMounted();
-  const [dim, setDim] = useState<(typeof dimensoes)[number]["id"]>("cc");
+  const { dataset } = useDataset();
+  const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
+
+  const dimensoes = useMemo(
+    () =>
+      [
+        {
+          id: "cc" as const,
+          label: "Centro de Custo",
+          icon: Layers,
+          rows: dataset?.segCentroCusto ?? segCentroCusto,
+          colLabel: "Centro de Custo",
+        },
+        {
+          id: "item" as const,
+          label: "Item de Investimento",
+          icon: ListTree,
+          rows: dataset?.segItem ?? segItem,
+          colLabel: "Item",
+        },
+        {
+          id: "conta" as const,
+          label: "Conta Contábil",
+          icon: Wallet,
+          rows: dataset?.segConta ?? segConta,
+          colLabel: "Conta Contábil",
+        },
+      ],
+    [dataset],
+  );
 
   const ativa = dimensoes.find((d) => d.id === dim)!;
 
