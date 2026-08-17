@@ -22,12 +22,15 @@ import {
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
+import { CsvUpload } from "@/components/dashboard/csv-upload";
+import { DatasetProvider, useDataset } from "@/lib/dataset-store";
+import { kpisFromDataset } from "@/lib/kpi-from-dataset";
 import {
   brl,
   centrosCusto,
   comparativo,
   contas,
-  kpis,
+  kpis as kpisDemo,
   maioresSaldos,
   respostasRapidas,
   risco,
@@ -105,6 +108,16 @@ function Filtro({ label, value }: { label: string; value: string }) {
 
 function Dashboard() {
   return (
+    <DatasetProvider>
+      <DashboardInner />
+    </DatasetProvider>
+  );
+}
+
+function DashboardInner() {
+  const { dataset } = useDataset();
+  const kpis = dataset ? kpisFromDataset(dataset) : kpisDemo;
+  return (
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
         <div className="flex items-center gap-4">
@@ -142,6 +155,8 @@ function Dashboard() {
             <RotateCcw className="size-4" /> Limpar filtros
           </button>
         </div>
+
+        <CsvUpload />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {kpis.map((k) => {

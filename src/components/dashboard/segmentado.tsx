@@ -2,12 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowDownRight, ArrowUpRight, Layers, ListTree, Wallet } from "lucide-react";
 import { brl, META_EXEC_PCT, segCentroCusto, segConta, segItem, type SegRow } from "@/lib/dashboard-data";
-
-const dimensoes = [
-  { id: "cc", label: "Centro de Custo", icon: Layers, rows: segCentroCusto, colLabel: "Centro de Custo" },
-  { id: "item", label: "Item de Investimento", icon: ListTree, rows: segItem, colLabel: "Item" },
-  { id: "conta", label: "Conta Contábil", icon: Wallet, rows: segConta, colLabel: "Conta Contábil" },
-] as const;
+import { useDataset } from "@/lib/dataset-store";
 
 type Ordem = "previsto" | "saldo" | "desvio";
 
@@ -37,8 +32,37 @@ const dotClass = {
 
 export function VisaoSegmentada() {
   const mounted = useMounted();
-  const [dim, setDim] = useState<(typeof dimensoes)[number]["id"]>("cc");
+  const { dataset } = useDataset();
+  const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
+
+  const dimensoes = useMemo(
+    () =>
+      [
+        {
+          id: "cc" as const,
+          label: "Centro de Custo",
+          icon: Layers,
+          rows: dataset?.segCentroCusto ?? segCentroCusto,
+          colLabel: "Centro de Custo",
+        },
+        {
+          id: "item" as const,
+          label: "Item de Investimento",
+          icon: ListTree,
+          rows: dataset?.segItem ?? segItem,
+          colLabel: "Item",
+        },
+        {
+          id: "conta" as const,
+          label: "Conta Contábil",
+          icon: Wallet,
+          rows: dataset?.segConta ?? segConta,
+          colLabel: "Conta Contábil",
+        },
+      ],
+    [dataset],
+  );
 
   const ativa = dimensoes.find((d) => d.id === dim)!;
 
