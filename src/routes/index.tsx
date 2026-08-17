@@ -152,10 +152,12 @@ function Dashboard() {
 }
 
 function DashboardInner() {
-  const { dataset, isUpload } = useDataset();
+  const { dataset, isUpload, filtros, setFiltro, limparFiltros, temFiltro, receita } = useDataset();
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
-  const periodo = `${MESES[0]} - ${MESES[mb - 1]}`;
+  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
+  const num = (k: keyof Filtros) => (v: string) => setFiltro(k as "mesIni", Number(v));
+
   const serie = serieAcumulada(dataset);
   const contas = contasPct(dataset);
   const cc = centrosTop(dataset);
