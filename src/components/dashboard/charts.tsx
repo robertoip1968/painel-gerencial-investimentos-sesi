@@ -39,8 +39,7 @@ export function ExecucaoLineChart({ data }: { data: SerieItem[] }) {
           tick={axis}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(v: number) => `${v} Mi`}
-          domain={[0, 60]}
+          tickFormatter={(v: number) => `${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} Mi`}
         />
         <Tooltip
           formatter={(v: number) => [`R$ ${v.toFixed(2).replace(".", ",")} mi`, ""]}
