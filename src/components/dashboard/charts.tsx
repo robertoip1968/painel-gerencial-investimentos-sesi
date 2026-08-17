@@ -132,12 +132,13 @@ export function ContasDonut({ contas }: { contas: { nome: string; pct: number }[
   );
 }
 
-export function ExecucaoDonut() {
+export function ExecucaoDonut({ pct }: { pct: number }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 200 }} />;
+  const v = Math.max(0, Math.min(100, pct));
   const data = [
-    { name: "Realizado", value: 22.19 },
-    { name: "A executar", value: 77.81 },
+    { name: "Realizado", value: v },
+    { name: "A executar", value: 100 - v },
   ];
   return (
     <ResponsiveContainer width="100%" height={200}>
