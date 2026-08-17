@@ -159,19 +159,22 @@ export function VisaoSegmentada() {
           </p>
           {mounted ? (
             <ResponsiveContainer width="100%" height={330}>
-              <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" horizontal={false} />
+              <BarChart data={chartData} layout="horizontal" margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
                 <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
                   type="category"
                   dataKey="nome"
-                  width={150}
-                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                  interval={0}
+                  tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  angle={-35}
+                  textAnchor="end"
+                  height={70}
+                />
+                <YAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                   tickLine={false}
                   axisLine={false}
                 />
