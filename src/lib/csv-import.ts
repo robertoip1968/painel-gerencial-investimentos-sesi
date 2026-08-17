@@ -5,6 +5,7 @@ export type RawRow = {
   item: string;
   conta: string;
   grupoCC: string;
+  mes: string;
   previsto: number;
   comprometido: number;
   realizado: number;
@@ -19,13 +20,15 @@ export type Dataset = {
   previsto: number;
   comprometido: number;
   realizado: number;
+  mensal?: { mes: number; previsto: number; realizado: number }[];
 };
 
 const ALIASES: Record<keyof RawRow, string[]> = {
   centroCusto: ["centro de custo", "centrocusto", "centro_custo", "cc", "unidade", "centro"],
   item: ["item", "item de investimento", "iteminvestimento", "item_investimento", "descricao", "descrição", "projeto", "investimento"],
   conta: ["conta contabil", "conta contábil", "conta_contabil", "contacontabil", "conta", "natureza"],
-  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento"],
+  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento", "origem"],
+  mes: ["mes", "mês", "competencia", "competência", "periodo", "período"],
   previsto: ["previsto", "orcado", "orçado", "orcamento", "orçamento", "valor previsto", "budget"],
   comprometido: ["comprometido", "empenhado", "compromissado", "valor comprometido"],
   realizado: ["realizado", "executado", "pago", "valor realizado", "despesa"],
@@ -86,6 +89,11 @@ function mapColumns(headers: string[]) {
   const map: Partial<Record<keyof RawRow, number>> = {};
   (Object.keys(ALIASES) as (keyof RawRow)[]).forEach((key) => {
     let idx = nh.findIndex((h) => ALIASES[key].includes(h));
+    // prefere colunas de nome (nomeCentroCusto) em vez de códigos (codCentroCusto)
+    if (idx < 0)
+      idx = nh.findIndex((h) => h.startsWith("nome") && ALIASES[key].some((a) => h.includes(a)));
+    if (idx < 0)
+      idx = nh.findIndex((h) => !h.startsWith("cod") && ALIASES[key].some((a) => h.includes(a)));
     if (idx < 0) idx = nh.findIndex((h) => ALIASES[key].some((a) => h.includes(a)));
     if (idx >= 0) map[key] = idx;
   });
@@ -128,6 +136,7 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
       item: get(c, map.item),
       conta: get(c, map.conta),
       grupoCC: get(c, map.grupoCC),
+      mes: get(c, map.mes),
       previsto: parseNumber(get(c, map.previsto)),
       comprometido: parseNumber(get(c, map.comprometido)),
       realizado: parseNumber(get(c, map.realizado)),
@@ -143,12 +152,24 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
     { previsto: 0, comprometido: 0, realizado: 0 },
   );
 
+  const mensal = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, previsto: 0, realizado: 0 }));
+  let temMes = false;
+  for (const r of rows) {
+    const m = parseInt(r.mes, 10);
+    if (m >= 1 && m <= 12) {
+      temMes = true;
+      mensal[m - 1]!.previsto += r.previsto;
+      mensal[m - 1]!.realizado += r.realizado;
+    }
+  }
+
   return {
     fileName,
     linhas: rows.length,
     segCentroCusto: agrupar(rows, (r) => r.centroCusto, (r) => r.grupoCC),
     segItem: agrupar(rows, (r) => r.item || r.centroCusto, (r) => r.conta),
-    segConta: agrupar(rows, (r) => r.conta, () => "Imobilizado"),
+    segConta: agrupar(rows, (r) => r.conta, (r) => r.item || "Conta contábil"),
+    ...(temMes ? { mensal } : {}),
     ...totals,
   };
 }

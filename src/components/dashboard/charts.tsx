@@ -12,8 +12,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { contas, execucaoMensal } from "@/lib/dashboard-data";
-
 function useMounted() {
   const [m, setM] = useState(false);
   useEffect(() => setM(true), []);
@@ -22,20 +20,26 @@ function useMounted() {
 
 const axis = { fontSize: 11, fill: "var(--muted-foreground)" };
 
-export function ExecucaoLineChart() {
+export type SerieItem = {
+  mes: string;
+  previsto: number;
+  realizado: number | null;
+  forecast: number | null;
+};
+
+export function ExecucaoLineChart({ data }: { data: SerieItem[] }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 300 }} />;
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={execucaoMensal} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
         <XAxis dataKey="mes" tick={axis} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
         <YAxis
           tick={axis}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(v: number) => `${v} Mi`}
-          domain={[0, 60]}
+          tickFormatter={(v: number) => `${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} Mi`}
         />
         <Tooltip
           formatter={(v: number) => [`R$ ${v.toFixed(2).replace(".", ",")} mi`, ""]}
@@ -101,7 +105,7 @@ const palette = [
   "var(--muted-foreground)",
 ];
 
-export function ContasDonut() {
+export function ContasDonut({ contas }: { contas: { nome: string; pct: number }[] }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 230 }} />;
   const data = contas.filter((c) => c.pct > 0);
@@ -127,12 +131,13 @@ export function ContasDonut() {
   );
 }
 
-export function ExecucaoDonut() {
+export function ExecucaoDonut({ pct }: { pct: number }) {
   const mounted = useMounted();
   if (!mounted) return <div style={{ height: 200 }} />;
+  const v = Math.max(0, Math.min(100, pct));
   const data = [
-    { name: "Realizado", value: 22.19 },
-    { name: "A executar", value: 77.81 },
+    { name: "Realizado", value: v },
+    { name: "A executar", value: 100 - v },
   ];
   return (
     <ResponsiveContainer width="100%" height={200}>

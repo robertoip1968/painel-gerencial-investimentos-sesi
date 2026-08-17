@@ -25,17 +25,22 @@ import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import { CsvUpload } from "@/components/dashboard/csv-upload";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
+import { brl } from "@/lib/dashboard-data";
 import {
-  brl,
-  centrosCusto,
-  comparativo,
-  contas,
-  kpis as kpisDemo,
+  ANO,
+  MESES,
+  centrosTop,
+  contasPct,
   maioresSaldos,
-  respostasRapidas,
-  risco,
-  totalCC,
-} from "@/lib/dashboard-data";
+  mesBase,
+  mi,
+  pctFmt,
+  receita,
+  respostasFrom,
+  riscoResumo,
+  ritmos,
+  serieAcumulada,
+} from "@/lib/real-data";
 
 
 export const Route = createFileRoute("/")({
@@ -115,8 +120,19 @@ function Dashboard() {
 }
 
 function DashboardInner() {
-  const { dataset } = useDataset();
-  const kpis = dataset ? kpisFromDataset(dataset) : kpisDemo;
+  const { dataset, isUpload } = useDataset();
+  const kpis = kpisFromDataset(dataset);
+  const mb = mesBase(dataset);
+  const periodo = `${MESES[0]} - ${MESES[mb - 1]}`;
+  const serie = serieAcumulada(dataset);
+  const contas = contasPct(dataset);
+  const cc = centrosTop(dataset);
+  const saldos = maioresSaldos(dataset);
+  const risco = riscoResumo(dataset);
+  const respostas = respostasFrom(dataset);
+  const { media, necessario } = ritmos(dataset);
+  const execPct = dataset.previsto > 0 ? (dataset.realizado / dataset.previsto) * 100 : 0;
+  const saldoTop = saldos.reduce((a, s) => a + s.saldo, 0);
   return (
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
@@ -128,14 +144,14 @@ function DashboardInner() {
               Painel Gerencial de Investimentos – SESI MT
             </h1>
             <p className="text-sm text-navy-foreground/70">
-              Visão Executiva – Janeiro a Junho/2026
+              Visão Executiva – {periodo}/{ANO} • {isUpload ? dataset.fileName : "Base SHIFT 2026"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right text-xs text-navy-foreground/70">
             <div>Última atualização:</div>
-            <div className="text-sm text-navy-foreground">13/08/2026 08:30</div>
+            <div className="text-sm text-navy-foreground">{dataset.linhas.toLocaleString("pt-BR")} lançamentos</div>
           </div>
           <button className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90">
             <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
@@ -145,8 +161,8 @@ function DashboardInner() {
 
       <main className="space-y-4 p-4 sm:p-6">
         <div className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-7">
-          <Filtro label="Ano" value="2026" />
-          <Filtro label="Período" value="Jan - Jun" />
+          <Filtro label="Ano" value={String(ANO)} />
+          <Filtro label="Período" value={periodo} />
           <Filtro label="Área / Gerência" value="Todos" />
           <Filtro label="Centro de Custo" value="Todos" />
           <Filtro label="Conta Contábil" value="Todos" />
@@ -200,7 +216,7 @@ function DashboardInner() {
             </span>
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-            {respostasRapidas.map((r) => {
+            {respostas.map((r) => {
               const tone = {
                 brand: "border-l-brand",
                 ok: "border-l-ok",
@@ -229,20 +245,20 @@ function DashboardInner() {
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Panel title="Execução do 1º Semestre 2026" className="xl:col-span-3">
+          <Panel title={`Execução ${periodo}/${ANO}`} className="xl:col-span-3">
             <div className="relative">
-              <ExecucaoDonut />
+              <ExecucaoDonut pct={execPct} />
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-navy">22,19%</span>
+                <span className="text-2xl font-bold text-navy">{pctFmt(dataset.realizado, dataset.previsto)}</span>
                 <span className="text-xs text-muted-foreground">do orçamento anual</span>
               </div>
             </div>
             <div className="mt-3 rounded-md bg-muted px-4 py-3 text-center">
-              <p className="text-lg font-bold text-navy">R$ 11,70 mi</p>
+              <p className="text-lg font-bold text-navy">{mi(dataset.realizado)}</p>
               <p className="text-xs text-muted-foreground">Realizado no período</p>
             </div>
             <div className="mt-3 text-center text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">R$ 52,73 mi</p>
+              <p className="font-semibold text-foreground">{mi(dataset.previsto)}</p>
               <p>Orçamento anual</p>
             </div>
           </Panel>
@@ -252,13 +268,13 @@ function DashboardInner() {
             hint="(acumulado)"
             className="xl:col-span-6"
           >
-            <ExecucaoLineChart />
+            <ExecucaoLineChart data={serie} />
             <div className="mt-2 inline-block rounded-md border border-border bg-muted/60 px-3 py-2 text-xs text-foreground">
               <p>
-                Ritmo necessário (Jul-Dez): <strong>R$ 6,84 mi/mês</strong>
+                Ritmo necessário ({MESES[mb] ?? "—"}-{MESES[11]}): <strong>{mi(necessario)}/mês</strong>
               </p>
               <p>
-                Média realizada (Jan-Jun): <strong>R$ 1,95 mi/mês</strong>
+                Média realizada ({MESES[0]}-{MESES[mb - 1]}): <strong>{mi(media)}/mês</strong>
               </p>
             </div>
           </Panel>
@@ -266,7 +282,7 @@ function DashboardInner() {
           <Panel title="Distribuição do Orçamento por Conta Contábil" className="xl:col-span-3">
             <div className="flex flex-col items-center gap-3 sm:flex-row">
               <div className="w-full sm:w-[45%]">
-                <ContasDonut />
+                <ContasDonut contas={contas} />
               </div>
               <ul className="w-full space-y-1.5 text-[11px] sm:w-[55%]">
                 {contas.map((c, i) => (
@@ -296,7 +312,7 @@ function DashboardInner() {
                 ))}
               </ul>
             </div>
-            <p className="mt-3 text-sm font-semibold text-navy">Total: R$ 52,73 mi</p>
+            <p className="mt-3 text-sm font-semibold text-navy">Total: {mi(dataset.previsto)}</p>
           </Panel>
         </div>
 
@@ -316,7 +332,7 @@ function DashboardInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {centrosCusto.map((r, i) => (
+                  {cc.linhas.map((r, i) => (
                     <tr key={r.cc} className="border-b border-border/60">
                       <td className="py-1.5 text-muted-foreground">{i + 1}</td>
                       <td className="py-1.5">{r.cc}</td>
@@ -334,10 +350,10 @@ function DashboardInner() {
                   <tr className="font-semibold text-navy">
                     <td className="py-2"></td>
                     <td className="py-2">TOTAL</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.previsto)}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.realizado)}</td>
-                    <td className="py-2 text-right tabular-nums">{totalCC.pct}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(totalCC.saldo)}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.previsto)}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.realizado)}</td>
+                    <td className="py-2 text-right tabular-nums">{cc.total.pct}</td>
+                    <td className="py-2 text-right tabular-nums">{brl(cc.total.saldo)}</td>
                     <td className="py-2">
                       <span className="mx-auto block size-2.5 rounded-full bg-crit" />
                     </td>
@@ -359,7 +375,7 @@ function DashboardInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {maioresSaldos.map((r) => (
+                  {saldos.map((r) => (
                     <tr key={r.item} className="border-b border-border/60">
                       <td className="py-1.5">{r.item}</td>
                       <td className="py-1.5 text-muted-foreground">{r.cc}</td>
@@ -371,8 +387,8 @@ function DashboardInner() {
                     <td className="py-2" colSpan={2}>
                       TOTAL TOP 10
                     </td>
-                    <td className="py-2 text-right tabular-nums">24.690.000</td>
-                    <td className="py-2 text-right tabular-nums">60,2%</td>
+                    <td className="py-2 text-right tabular-nums">{brl(saldoTop)}</td>
+                    <td className="py-2 text-right tabular-nums">{pctFmt(saldoTop, dataset.previsto - dataset.realizado)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -434,53 +450,59 @@ function DashboardInner() {
               <li className="flex gap-2">
                 <span className="mt-1 size-2.5 shrink-0 rounded-full bg-crit" />
                 <span>
-                  <strong>9</strong> Centros de Custo com execução abaixo de 15% e saldo superior a
-                  R$ 1 milhão.
+                  <strong>{risco[2]!.qtd}</strong> Centros de Custo em situação crítica ({risco[2]!.valor} previstos).
                 </span>
               </li>
               <li className="flex gap-2">
                 <MinusCircle className="mt-px size-3.5 shrink-0 text-crit" />
                 <span>
-                  <strong>6</strong> Itens de investimento sem execução até o momento.
+                  <strong>{risco[3]!.qtd}</strong> Itens de investimento sem execução até o momento.
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="mt-1 size-2.5 shrink-0 rounded-full bg-warn" />
                 <span>
-                  <strong>63%</strong> do saldo a executar está concentrado nos 8 maiores
-                  investimentos.
+                  <strong>{pctFmt(saldoTop, dataset.previsto - dataset.realizado)}</strong> do saldo a executar está concentrado nos 10 maiores itens.
                 </span>
               </li>
               <li className="flex gap-2">
                 <Info className="mt-px size-3.5 shrink-0 text-brand" />
-                <span>Ritmo médio necessário (Jul-Dez): R$ 6,84 mi/mês.</span>
+                <span>Ritmo médio necessário ({MESES[mb] ?? "—"}-{MESES[11]}): {mi(necessario)}/mês.</span>
               </li>
             </ul>
           </Panel>
 
-          <Panel title="Comparativo Mesmo Período Ano Anterior">
+          <Panel title={`Receita x Despesa – ${ANO}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="py-2 text-left font-medium"></th>
-                  <th className="py-2 text-right font-medium">Jan - Jun/2025 (R$)</th>
-                  <th className="py-2 text-right font-medium">Jan - Jun/2026 (R$)</th>
-                  <th className="py-2 text-right font-medium">Variação</th>
+                  <th className="py-2 text-right font-medium">Previsto</th>
+                  <th className="py-2 text-right font-medium">Realizado</th>
+                  <th className="py-2 text-right font-medium">% Exec.</th>
                 </tr>
               </thead>
               <tbody>
-                {comparativo.map((c) => (
+                {[
+                  { linha: "Receita", p: receita.previsto, r: receita.realizado },
+                  { linha: "Despesa", p: dataset.previsto, r: dataset.realizado },
+                  {
+                    linha: "Resultado",
+                    p: receita.previsto - dataset.previsto,
+                    r: receita.realizado - dataset.realizado,
+                  },
+                ].map((c) => (
                   <tr key={c.linha} className="border-b border-border/60">
                     <td className="py-2">{c.linha}</td>
-                    <td className="py-2 text-right tabular-nums">{c.a2025}</td>
-                    <td className="py-2 text-right tabular-nums">{c.a2026}</td>
+                    <td className="py-2 text-right tabular-nums">{mi(c.p)}</td>
+                    <td className="py-2 text-right tabular-nums">{mi(c.r)}</td>
                     <td className="py-2 text-right tabular-nums">
                       <span className="inline-flex items-center gap-1">
-                        {c.var}
-                        {c.dir === "up" ? (
+                        {pctFmt(c.r, c.p)}
+                        {c.r >= 0 ? (
                           <ArrowUp className="size-3.5 text-ok" />
                         ) : (
-                          <MinusCircle className="size-3.5 text-muted-foreground" />
+                          <MinusCircle className="size-3.5 text-crit" />
                         )}
                       </span>
                     </td>
@@ -496,7 +518,7 @@ function DashboardInner() {
                 <Database className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Fonte de dados:</p>
-                  <p className="text-muted-foreground">SHIFT – Gestão Corporativa</p>
+                  <p className="text-muted-foreground">{isUpload ? dataset.fileName : "SHIFT – Gestão Corporativa"}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -517,7 +539,7 @@ function DashboardInner() {
                 <CalendarDays className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Data base:</p>
-                  <p className="text-muted-foreground">Até 30/06/2026</p>
+                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{ANO}</p>
                 </div>
               </div>
             </div>

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowDownRight, ArrowUpRight, Layers, ListTree, Wallet } from "lucide-react";
-import { brl, META_EXEC_PCT, segCentroCusto, segConta, segItem, type SegRow } from "@/lib/dashboard-data";
+import { brl, type SegRow } from "@/lib/dashboard-data";
 import { useDataset } from "@/lib/dataset-store";
+import { MESES, mesBase } from "@/lib/real-data";
 
 type Ordem = "previsto" | "saldo" | "desvio";
 
@@ -14,12 +15,19 @@ function useMounted() {
   return m;
 }
 
-function derive(r: SegRow) {
+function derive(r: SegRow, meta: number) {
   const saldo = r.previsto - r.realizado;
   const disponivel = r.previsto - r.comprometido - r.realizado;
   const execPct = r.previsto > 0 ? (r.realizado / r.previsto) * 100 : 0;
-  const desvio = execPct - META_EXEC_PCT; // p.p. contra a meta do período
-  const situacao = r.previsto === 0 ? "none" : execPct >= 40 ? "ok" : execPct >= 20 ? "warn" : "crit";
+  const desvio = execPct - meta; // p.p. contra a meta linear do período
+  const situacao =
+    r.previsto === 0
+      ? "none"
+      : execPct >= meta * 0.9
+        ? "ok"
+        : execPct >= meta * 0.6
+          ? "warn"
+          : "crit";
   return { ...r, saldo, disponivel, execPct, desvio, situacao };
 }
 
@@ -35,6 +43,9 @@ export function VisaoSegmentada() {
   const { dataset } = useDataset();
   const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
+  const [busca, setBusca] = useState("");
+  const mb = mesBase(dataset);
+  const META_EXEC_PCT = Math.round((mb / 12) * 100);
 
   const dimensoes = useMemo(
     () =>
@@ -43,21 +54,21 @@ export function VisaoSegmentada() {
           id: "cc" as const,
           label: "Centro de Custo",
           icon: Layers,
-          rows: dataset?.segCentroCusto ?? segCentroCusto,
+          rows: dataset.segCentroCusto,
           colLabel: "Centro de Custo",
         },
         {
           id: "item" as const,
-          label: "Item de Investimento",
+          label: "Item Contábil",
           icon: ListTree,
-          rows: dataset?.segItem ?? segItem,
+          rows: dataset.segItem,
           colLabel: "Item",
         },
         {
           id: "conta" as const,
           label: "Conta Contábil",
           icon: Wallet,
-          rows: dataset?.segConta ?? segConta,
+          rows: dataset.segConta,
           colLabel: "Conta Contábil",
         },
       ],
@@ -67,11 +78,16 @@ export function VisaoSegmentada() {
   const ativa = dimensoes.find((d) => d.id === dim)!;
 
   const rows = useMemo(() => {
-    const d = ativa.rows.map(derive);
+    const q = busca.trim().toLowerCase();
+    const d = ativa.rows
+      .filter((r) => !q || r.nome.toLowerCase().includes(q) || r.grupo.toLowerCase().includes(q))
+      .map((r) => derive(r, META_EXEC_PCT));
     return [...d].sort((a, b) =>
       ordem === "previsto" ? b.previsto - a.previsto : ordem === "saldo" ? b.saldo - a.saldo : a.desvio - b.desvio,
     );
-  }, [ativa, ordem]);
+  }, [ativa, ordem, busca, META_EXEC_PCT]);
+
+  const visiveis = rows.slice(0, 25);
 
   const totais = rows.reduce(
     (acc, r) => ({
@@ -126,6 +142,13 @@ export function VisaoSegmentada() {
             <option value="saldo">Ordenar: maior saldo</option>
             <option value="desvio">Ordenar: maior desvio</option>
           </select>
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar…"
+            aria-label="Buscar"
+            className="w-40 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+          />
         </div>
       </div>
 
@@ -194,7 +217,7 @@ export function VisaoSegmentada() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {visiveis.map((r) => (
                 <tr key={r.nome} className="border-b border-border/60">
                   <td className="py-1.5">
                     <span className="block leading-tight">{r.nome}</span>
@@ -245,8 +268,9 @@ export function VisaoSegmentada() {
             </tbody>
           </table>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Desvio = % executado menos a meta linear do período ({META_EXEC_PCT}% até Jun). Situação:
-            verde ≥ 40%, amarelo 20–40%, vermelho &lt; 20%.
+            Exibindo {visiveis.length} de {rows.length} registros. Desvio = % executado menos a meta
+            linear do período ({META_EXEC_PCT}% até {MESES[mb - 1]}). Situação: verde ≥ 90% da meta,
+            amarelo 60–90%, vermelho &lt; 60%.
           </p>
         </div>
       </div>
