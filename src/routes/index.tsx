@@ -217,7 +217,7 @@ function DashboardInner() {
             </span>
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-            {respostasRapidas.map((r) => {
+            {respostas.map((r) => {
               const tone = {
                 brand: "border-l-brand",
                 ok: "border-l-ok",
