@@ -9,6 +9,8 @@ import {
   filtrosAtivos,
 } from "@/lib/facts";
 
+export type RiscoFiltro = "ok" | "warn" | "crit" | "semexec" | null;
+
 type Ctx = {
   dataset: Dataset;
   isUpload: boolean;
@@ -18,6 +20,8 @@ type Ctx = {
   limparFiltros: () => void;
   temFiltro: boolean;
   receita: { previsto: number; realizado: number; linhas: number };
+  risco: RiscoFiltro;
+  setRisco: (r: RiscoFiltro) => void;
 };
 
 const DatasetContext = createContext<Ctx>({
@@ -29,17 +33,23 @@ const DatasetContext = createContext<Ctx>({
   limparFiltros: () => {},
   temFiltro: false,
   receita: receitaFiltrada(filtrosPadrao),
+  risco: null,
+  setRisco: () => {},
 });
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
   const [upload, setUpload] = useState<Dataset | null>(null);
   const [filtros, setFiltros] = useState<Filtros>(filtrosPadrao);
+  const [risco, setRisco] = useState<RiscoFiltro>(null);
 
   const setFiltro = useCallback(
     <K extends keyof Filtros>(k: K, v: Filtros[K]) => setFiltros((f) => ({ ...f, [k]: v })),
     [],
   );
-  const limparFiltros = useCallback(() => setFiltros(filtrosPadrao), []);
+  const limparFiltros = useCallback(() => {
+    setFiltros(filtrosPadrao);
+    setRisco(null);
+  }, []);
 
   const value = useMemo<Ctx>(() => {
     const dataset = upload ?? despesaFiltrada(filtros);
@@ -52,8 +62,10 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       limparFiltros,
       temFiltro: filtrosAtivos(filtros),
       receita: receitaFiltrada(filtros),
+      risco,
+      setRisco,
     };
-  }, [upload, filtros, setFiltro, limparFiltros]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
