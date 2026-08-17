@@ -554,7 +554,7 @@ function DashboardInner() {
                     <p className="text-[10px] text-muted-foreground">{r.unidade}</p>
                     <p className="mt-1.5 text-sm font-semibold text-navy">{r.valor}</p>
                     <p className="text-[10px] text-muted-foreground">{r.sub}</p>
-                  </div>
+                  </button>
                 );
               })}
             </div>
