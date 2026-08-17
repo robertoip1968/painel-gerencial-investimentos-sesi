@@ -108,7 +108,7 @@ export function ContasDonut() {
   return (
     <ResponsiveContainer width="100%" height={230}>
       <PieChart>
-        <Pie isAnimationActive={false} data={data} dataKey="pct" innerRadius={52} outerRadius={92} paddingAngle={1}>
+        <Pie isAnimationActive={false} data={data} dataKey="pct" innerRadius={44} outerRadius={72} paddingAngle={1}>
           {data.map((_, i) => (
             <Cell key={i} fill={palette[i % palette.length]} stroke="var(--card)" />
           ))}
