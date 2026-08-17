@@ -257,8 +257,8 @@ function DashboardInner() {
         </div>
 
 
+        {import.meta.env.DEV ? <CsvUpload /> : null}
 
-        <CsvUpload />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {kpis.map((k) => {
