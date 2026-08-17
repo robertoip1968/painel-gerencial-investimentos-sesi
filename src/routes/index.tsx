@@ -25,17 +25,23 @@ import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import { CsvUpload } from "@/components/dashboard/csv-upload";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
+import { brl } from "@/lib/dashboard-data";
 import {
-  brl,
-  centrosCusto,
-  comparativo,
-  contas,
-  kpis as kpisDemo,
+  ANO,
+  MESES,
+  centrosTop,
+  contasPct,
+  forecastAno,
   maioresSaldos,
-  respostasRapidas,
-  risco,
-  totalCC,
-} from "@/lib/dashboard-data";
+  mesBase,
+  mi,
+  pctFmt,
+  receita,
+  respostasFrom,
+  riscoResumo,
+  ritmos,
+  serieAcumulada,
+} from "@/lib/real-data";
 
 
 export const Route = createFileRoute("/")({
