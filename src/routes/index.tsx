@@ -100,17 +100,48 @@ function Panel({
   );
 }
 
-function Filtro({ label, value }: { label: string; value: string }) {
+function Filtro({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onChange?: (v: string) => void;
+  options: { value: string; label: string }[];
+  disabled?: boolean;
+}) {
   return (
     <div className="min-w-0">
       <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
-      <div className="mt-1 flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground">
-        <span className="truncate">{value}</span>
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      <div className="relative mt-1">
+        <select
+          value={value}
+          disabled={disabled || !onChange}
+          onChange={(e) => onChange?.(e.target.value)}
+          aria-label={label}
+          className="w-full appearance-none truncate rounded-md border border-border bg-background px-3 py-1.5 pr-8 text-sm text-foreground disabled:opacity-70"
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       </div>
     </div>
   );
 }
+
+const mesOpts = MESES.map((m, i) => ({ value: String(i + 1), label: m }));
+const listOpts = (l: string[], todos: string) => [
+  { value: TODOS, label: todos },
+  ...l.map((n) => ({ value: n, label: n })),
+];
+
 
 function Dashboard() {
   return (
