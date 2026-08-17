@@ -21,6 +21,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
+import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import {
   brl,
   centrosCusto,
@@ -28,9 +29,11 @@ import {
   contas,
   kpis,
   maioresSaldos,
+  respostasRapidas,
   risco,
   totalCC,
 } from "@/lib/dashboard-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -173,6 +176,42 @@ function Dashboard() {
             );
           })}
         </div>
+
+        <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+          <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-navy">
+            Leitura Rápida
+            <span className="ml-1 font-normal normal-case text-muted-foreground">
+              (visão geral do exercício)
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+            {respostasRapidas.map((r) => {
+              const tone = {
+                brand: "border-l-brand",
+                ok: "border-l-ok",
+                warn: "border-l-warn",
+                crit: "border-l-crit",
+              }[r.tone];
+              const text = {
+                brand: "text-navy",
+                ok: "text-ok",
+                warn: "text-warn",
+                crit: "text-crit",
+              }[r.tone];
+              return (
+                <div
+                  key={r.pergunta}
+                  className={`rounded-md border border-border border-l-4 ${tone} bg-muted/40 p-3`}
+                >
+                  <p className="text-[11px] font-medium text-muted-foreground">{r.pergunta}</p>
+                  <p className={`mt-1.5 text-sm font-bold leading-tight ${text}`}>{r.resposta}</p>
+                  <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{r.detalhe}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
           <Panel title="Execução do 1º Semestre 2026" className="xl:col-span-3">
@@ -370,6 +409,9 @@ function Dashboard() {
             </div>
           </Panel>
         </div>
+
+        <VisaoSegmentada />
+
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           <Panel title="Destaques e Alertas">
