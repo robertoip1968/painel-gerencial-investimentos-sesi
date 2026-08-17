@@ -167,7 +167,17 @@ function Dashboard() {
 
 function DashboardInner() {
   const navigate = useNavigate();
-  const { dataset, isUpload, filtros, setFiltro, limparFiltros, temFiltro, receita } = useDataset();
+  const {
+    dataset,
+    isUpload,
+    filtros,
+    setFiltro,
+    limparFiltros,
+    temFiltro,
+    receita,
+    risco: riscoSel,
+    setRisco,
+  } = useDataset();
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
   const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
