@@ -61,7 +61,7 @@ function LoginPage() {
         <img
           src={logoAsset.url}
           alt="FIEMT SESI MT – 50 anos"
-          className="relative h-20 w-auto rounded-lg bg-white px-4 py-3"
+          className="relative h-20 w-auto self-start rounded-lg bg-white px-4 py-3 object-contain"
         />
         <div className="relative max-w-md space-y-4">
           <h2 className="text-3xl font-bold uppercase leading-tight">
@@ -79,8 +79,8 @@ function LoginPage() {
 
       <div className="flex items-center justify-center p-6 text-foreground">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
-          <div className="mb-6 lg:hidden">
-            <img src={logoAsset.url} alt="FIEMT SESI MT – 50 anos" className="h-12 w-auto" />
+          <div className="mb-6 flex justify-center lg:hidden">
+            <img src={logoAsset.url} alt="FIEMT SESI MT – 50 anos" className="h-12 w-auto object-contain" />
           </div>
           <h1 className="text-xl font-bold uppercase tracking-wide text-navy">Acesso ao painel</h1>
           <p className="mt-1 text-sm text-muted-foreground">
