@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
+import logoAsset from "@/assets/fiemt-sesi-logo.png.asset.json";
 import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
