@@ -200,7 +200,11 @@ function DashboardInner() {
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-extrabold italic tracking-tight">SESI MT</span>
+          <img
+            src={logoAsset.url}
+            alt="FIEMT SESI MT – 50 anos"
+            className="h-11 w-auto rounded-md bg-white px-2 py-1"
+          />
           <div className="h-9 w-px bg-navy-foreground/25" />
           <div>
             <h1 className="text-lg font-bold uppercase leading-tight sm:text-xl">

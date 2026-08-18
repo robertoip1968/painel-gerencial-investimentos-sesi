@@ -57,7 +57,11 @@ function LoginPage() {
       <div className="relative grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
 
-        <span className="relative text-4xl font-extrabold italic tracking-tight">SESI MT</span>
+        <img
+          src={logoAsset.url}
+          alt="FIEMT SESI MT – 50 anos"
+          className="relative h-20 w-auto rounded-lg bg-white px-4 py-3"
+        />
         <div className="relative max-w-md space-y-4">
           <h2 className="text-3xl font-bold uppercase leading-tight">
             Painel Gerencial de Investimentos
