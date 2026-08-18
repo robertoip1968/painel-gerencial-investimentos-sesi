@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Lock, LogIn, User } from "lucide-react";
 import { entrar, getSessao } from "@/lib/auth-local";
 import bgAsset from "@/assets/sesi-login.png.asset.json";
+import logoAsset from "@/assets/fiemt-sesi-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -57,7 +58,11 @@ function LoginPage() {
       <div className="relative grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
 
-        <span className="relative text-4xl font-extrabold italic tracking-tight">SESI MT</span>
+        <img
+          src={logoAsset.url}
+          alt="FIEMT SESI MT – 50 anos"
+          className="relative h-20 w-auto rounded-lg bg-white px-4 py-3"
+        />
         <div className="relative max-w-md space-y-4">
           <h2 className="text-3xl font-bold uppercase leading-tight">
             Painel Gerencial de Investimentos
@@ -75,7 +80,7 @@ function LoginPage() {
       <div className="flex items-center justify-center p-6 text-foreground">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 lg:hidden">
-            <span className="text-2xl font-extrabold italic tracking-tight text-navy">SESI MT</span>
+            <img src={logoAsset.url} alt="FIEMT SESI MT – 50 anos" className="h-12 w-auto" />
           </div>
           <h1 className="text-xl font-bold uppercase tracking-wide text-navy">Acesso ao painel</h1>
           <p className="mt-1 text-sm text-muted-foreground">
