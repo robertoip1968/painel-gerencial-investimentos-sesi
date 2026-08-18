@@ -181,6 +181,7 @@ function DashboardInner() {
     risco: riscoSel,
     setRisco,
   } = useDataset();
+  const [filtrosAbertos, setFiltrosAbertos] = useState(true);
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
   const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
@@ -217,10 +218,23 @@ function DashboardInner() {
           </div>
           <button
             type="button"
-            onClick={() => document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            aria-expanded={filtrosAbertos}
+            aria-controls="filtros"
+            onClick={() => {
+              const abrir = !filtrosAbertos;
+              setFiltrosAbertos(abrir);
+              if (abrir) {
+                requestAnimationFrame(() =>
+                  document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                );
+              }
+            }}
             className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
-            <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
+            <Filter className="size-4" /> Filtros
+            <ChevronDown
+              className={`size-4 transition-transform ${filtrosAbertos ? "rotate-180" : ""}`}
+            />
           </button>
           <button
             type="button"
@@ -237,7 +251,11 @@ function DashboardInner() {
       </header>
 
       <main className="space-y-4 p-4 sm:p-6">
-        <div id="filtros" className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
+        <div
+          id="filtros"
+          hidden={!filtrosAbertos}
+          className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6"
+        >
           <Filtro label="Ano" value={String(ANO)} options={[{ value: String(ANO), label: String(ANO) }]} />
           <Filtro
             label="Mês inicial"
