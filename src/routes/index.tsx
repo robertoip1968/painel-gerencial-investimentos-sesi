@@ -161,7 +161,9 @@ function Dashboard() {
   return (
     <DatasetProvider>
       <DashboardInner />
+      <AssistenteVirtual />
     </DatasetProvider>
+
   );
 }
 
