@@ -181,6 +181,7 @@ function DashboardInner() {
     risco: riscoSel,
     setRisco,
   } = useDataset();
+  const [filtrosAbertos, setFiltrosAbertos] = useState(true);
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
   const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
