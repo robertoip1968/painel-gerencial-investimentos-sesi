@@ -27,6 +27,7 @@ import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dash
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import { CsvUpload } from "@/components/dashboard/csv-upload";
 import { LancamentosConta } from "@/components/dashboard/lancamentos";
+import { AssistenteVirtual } from "@/components/dashboard/assistente";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
 import { brl } from "@/lib/dashboard-data";
