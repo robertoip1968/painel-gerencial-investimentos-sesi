@@ -34,7 +34,7 @@ Para projeções de encerramento e déficit, use o forecast (ritmo médio x 12) 
 ===== DADOS DO PAINEL =====
 ${body.contexto ?? "(sem contexto disponível)"}
 ===========================`,
-          messages: convertToModelMessages(body.messages ?? []),
+          messages: await convertToModelMessages(body.messages ?? []),
         });
 
         return result.toUIMessageStreamResponse();
