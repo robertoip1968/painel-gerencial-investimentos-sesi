@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Lock, LogIn, User } from "lucide-react";
 import { entrar, getSessao } from "@/lib/auth-local";
 import bgAsset from "@/assets/sesi-login.png.asset.json";
+import logoAsset from "@/assets/fiemt-sesi-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
