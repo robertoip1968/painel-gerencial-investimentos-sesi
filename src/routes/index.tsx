@@ -218,10 +218,23 @@ function DashboardInner() {
           </div>
           <button
             type="button"
-            onClick={() => document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            aria-expanded={filtrosAbertos}
+            aria-controls="filtros"
+            onClick={() => {
+              const abrir = !filtrosAbertos;
+              setFiltrosAbertos(abrir);
+              if (abrir) {
+                requestAnimationFrame(() =>
+                  document.getElementById("filtros")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                );
+              }
+            }}
             className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
-            <Filter className="size-4" /> Filtros <ChevronDown className="size-4" />
+            <Filter className="size-4" /> Filtros
+            <ChevronDown
+              className={`size-4 transition-transform ${filtrosAbertos ? "rotate-180" : ""}`}
+            />
           </button>
           <button
             type="button"
