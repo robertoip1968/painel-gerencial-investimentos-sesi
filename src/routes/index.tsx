@@ -218,7 +218,7 @@ function DashboardInner() {
               Painel Gerencial de Investimentos – SESI MT
             </h1>
             <p className="text-sm text-navy-foreground/70">
-              Visão Executiva – {periodo}/{ANO} • {fonte === "db" ? "PostgreSQL • dash_sesi" : "Base SHIFT 2026"}
+              Visão Executiva – {periodo}/{ANO()} • {fonte === "db" ? "PostgreSQL • dash_sesi" : "Base SHIFT 2026"}
             </p>
           </div>
         </div>
@@ -267,7 +267,7 @@ function DashboardInner() {
           hidden={!filtrosAbertos}
           className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6"
         >
-          <Filtro label="Ano" value={String(ANO)} options={[{ value: String(ANO), label: String(ANO) }]} />
+          <Filtro label="Ano" value={String(ANO())} options={[{ value: String(ANO()), label: String(ANO()) }]} />
           <Filtro
             label="Mês inicial"
             value={String(filtros.mesIni)}
@@ -410,7 +410,7 @@ function DashboardInner() {
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Panel title={`Execução ${periodo}/${ANO}`} className="xl:col-span-3">
+          <Panel title={`Execução ${periodo}/${ANO()}`} className="xl:col-span-3">
             <div className="relative">
               <ExecucaoDonut pct={execPct} />
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -651,7 +651,7 @@ function DashboardInner() {
             </ul>
           </Panel>
 
-          <Panel title={`Receita x Despesa – ${ANO}`}>
+          <Panel title={`Receita x Despesa – ${ANO()}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
@@ -718,7 +718,7 @@ function DashboardInner() {
                 <CalendarDays className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Data base:</p>
-                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{ANO}</p>
+                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{ANO()}</p>
                 </div>
               </div>
             </div>
