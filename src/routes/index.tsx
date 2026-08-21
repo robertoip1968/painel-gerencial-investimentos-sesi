@@ -57,7 +57,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Visão executiva da execução orçamentária de investimentos do SESI MT — previsto, comprometido, realizado, forecast e riscos, Jan a Jun/2026.",
+          "Visão executiva da execução orçamentária de investimentos do SESI MT — previsto, realizado, forecast e riscos, Jan a Jun/2026.",
       },
       { property: "og:title", content: "Painel Gerencial de Investimentos – SESI MT" },
       {

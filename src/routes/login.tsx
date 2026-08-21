@@ -78,7 +78,7 @@ function LoginPage() {
             Painel Gerencial de Investimentos
           </h2>
           <p className="text-navy-foreground/70">
-            Previsto, comprometido, realizado, saldo e tendência de encerramento do exercício — por
+            Previsto, realizado, saldo e tendência de encerramento do exercício — por
             centro de custo, item e conta contábil.
           </p>
         </div>
