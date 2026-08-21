@@ -8,12 +8,12 @@ import {
   type ReactNode,
 } from "react";
 import type { Dataset } from "@/lib/csv-import";
-import { realDataset } from "@/lib/real-data";
 import {
   aplicarFatos,
   despesaFiltrada,
   filtrosPadrao,
   receitaFiltrada,
+  vazio,
   type Filtros,
   filtrosAtivos,
 } from "@/lib/facts";
@@ -32,10 +32,16 @@ type Ctx = {
   receita: { previsto: number; realizado: number; linhas: number };
   risco: RiscoFiltro;
   setRisco: (r: RiscoFiltro) => void;
+  /** Recarrega os fatos direto do PostgreSQL (após importação, por exemplo). */
+  recarregar: () => Promise<void>;
+  carregando: boolean;
+  /** Mensagem de indisponibilidade dos dados oficiais (produção). */
+  erroDados: string | null;
+  fonte: "db" | "local" | "indisponivel" | "vazio";
 };
 
 const DatasetContext = createContext<Ctx>({
-  dataset: realDataset,
+  dataset: despesaFiltrada(filtrosPadrao),
   isUpload: false,
   setDataset: () => {},
   filtros: filtrosPadrao,
@@ -45,6 +51,10 @@ const DatasetContext = createContext<Ctx>({
   receita: receitaFiltrada(filtrosPadrao),
   risco: null,
   setRisco: () => {},
+  recarregar: async () => {},
+  carregando: false,
+  erroDados: null,
+  fonte: "local",
 });
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
@@ -52,21 +62,36 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [filtros, setFiltros] = useState<Filtros>(filtrosPadrao);
   const [risco, setRisco] = useState<RiscoFiltro>(null);
   const [versao, setVersao] = useState(0);
+  const [carregando, setCarregando] = useState(false);
+  const [erroDados, setErroDados] = useState<string | null>(null);
+  const [fonte, setFonte] = useState<Ctx["fonte"]>("local");
 
-  // Se houver um Postgres configurado (DATABASE_URL), os fatos vêm do banco.
-  useEffect(() => {
-    let ativo = true;
-    void carregarFatos()
-      .then((novo) => {
-        if (!ativo || !novo) return;
-        aplicarFatos(novo);
-        setVersao((v) => v + 1);
-      })
-      .catch(() => {});
-    return () => {
-      ativo = false;
-    };
+  const recarregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const r = await carregarFatos();
+      setFonte(r.fonte);
+      if (r.fonte === "db" && r.payload) {
+        aplicarFatos(r.payload);
+        setErroDados(null);
+      } else if (r.fonte === "indisponivel" || r.fonte === "vazio") {
+        aplicarFatos(vazio());
+        setErroDados(r.mensagem ?? "Não foi possível carregar os dados do PostgreSQL.");
+      } else {
+        setErroDados(null);
+      }
+      setVersao((v) => v + 1);
+    } catch {
+      setFonte("indisponivel");
+      setErroDados("Não foi possível carregar os dados do PostgreSQL.");
+    } finally {
+      setCarregando(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void recarregar();
+  }, [recarregar]);
 
   const setFiltro = useCallback(
     <K extends keyof Filtros>(k: K, v: Filtros[K]) => setFiltros((f) => ({ ...f, [k]: v })),
@@ -90,8 +115,12 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       receita: receitaFiltrada(filtros),
       risco,
       setRisco,
+      recarregar,
+      carregando,
+      erroDados,
+      fonte,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, carregando, erroDados, fonte]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
