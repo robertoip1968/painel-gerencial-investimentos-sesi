@@ -1,13 +1,23 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Dataset } from "@/lib/csv-import";
 import { realDataset } from "@/lib/real-data";
 import {
+  aplicarFatos,
   despesaFiltrada,
   filtrosPadrao,
   receitaFiltrada,
   type Filtros,
   filtrosAtivos,
 } from "@/lib/facts";
+import { carregarFatos } from "@/lib/fatos.functions";
 
 export type RiscoFiltro = "ok" | "warn" | "crit" | "semexec" | null;
 
