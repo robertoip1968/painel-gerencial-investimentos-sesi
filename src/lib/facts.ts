@@ -13,7 +13,7 @@ type Bloco = {
   realizado: number[];
 };
 
-const base = fatos as unknown as {
+export type FatosPayload = {
   ano: number;
   empresa: string;
   fileName: string;
@@ -23,6 +23,9 @@ const base = fatos as unknown as {
   despesa: Bloco;
   receita: Bloco;
 };
+
+/** Fonte ativa dos fatos: JSON embarcado por padrão, substituído pelo Postgres quando disponível. */
+let base = fatos as unknown as FatosPayload;
 
 export type Filtros = {
   mesIni: number;
@@ -42,14 +45,25 @@ export const filtrosPadrao: Filtros = {
   conta: TODOS,
 };
 
+const ordenar = (l: string[]) => [...l].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
 export const opcoes = {
-  cc: [...base.cc].sort((a, b) => a.localeCompare(b, "pt-BR")),
-  item: [...base.item].sort((a, b) => a.localeCompare(b, "pt-BR")),
-  conta: [...base.conta].sort((a, b) => a.localeCompare(b, "pt-BR")),
+  cc: ordenar(base.cc),
+  item: ordenar(base.item),
+  conta: ordenar(base.conta),
 };
 
 export const FATOS_ANO = base.ano;
-export const FATOS_FILE = base.fileName;
+export let FATOS_FILE = base.fileName;
+
+/** Troca a fonte de dados em memória (usado ao carregar os fatos do Postgres). */
+export function aplicarFatos(novo: FatosPayload) {
+  base = novo;
+  opcoes.cc = ordenar(novo.cc);
+  opcoes.item = ordenar(novo.item);
+  opcoes.conta = ordenar(novo.conta);
+  FATOS_FILE = novo.fileName;
+}
 
 export function filtrosAtivos(f: Filtros) {
   return (
