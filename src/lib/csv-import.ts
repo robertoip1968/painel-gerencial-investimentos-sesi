@@ -62,18 +62,17 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
     grupoCC: get(c, map.grupoCC),
     mes: get(c, map.mes),
     previsto: parseNumber(get(c, map.previsto)),
-    comprometido: parseNumber(get(c, map.comprometido)),
     realizado: parseNumber(get(c, map.realizado)),
   }));
 
   const totals = rows.reduce(
     (a, r) => ({
       previsto: a.previsto + r.previsto,
-      comprometido: a.comprometido + r.comprometido,
       realizado: a.realizado + r.realizado,
     }),
-    { previsto: 0, comprometido: 0, realizado: 0 },
+    { previsto: 0, realizado: 0 },
   );
+
 
   const mensal = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, previsto: 0, realizado: 0 }));
   let temMes = false;

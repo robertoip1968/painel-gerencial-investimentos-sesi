@@ -17,7 +17,6 @@ function useMounted() {
 
 function derive(r: SegRow, meta: number) {
   const saldo = r.previsto - r.realizado;
-  const disponivel = r.previsto - r.comprometido - r.realizado;
   const execPct = r.previsto > 0 ? (r.realizado / r.previsto) * 100 : 0;
   const desvio = execPct - meta; // p.p. contra a meta linear do período
   const situacao =
@@ -28,8 +27,9 @@ function derive(r: SegRow, meta: number) {
         : execPct >= meta * 0.6
           ? "warn"
           : "crit";
-  return { ...r, saldo, disponivel, execPct, desvio, situacao };
+  return { ...r, saldo, execPct, desvio, situacao };
 }
+
 
 const dotClass = {
   ok: "bg-ok",
