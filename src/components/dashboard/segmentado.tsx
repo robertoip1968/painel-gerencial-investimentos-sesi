@@ -250,7 +250,7 @@ export function VisaoSegmentada() {
                     <span className="text-[10px] text-muted-foreground">{r.grupo}</span>
                   </td>
                   <td className="py-1.5 text-right tabular-nums">{brl(r.previsto)}</td>
-                  <td className="py-1.5 text-right tabular-nums">{brl(r.comprometido)}</td>
+
                   <td className="py-1.5 text-right tabular-nums">{brl(r.realizado)}</td>
                   <td className="py-1.5 text-right tabular-nums">{pct(r.execPct)}</td>
                   <td
@@ -278,7 +278,7 @@ export function VisaoSegmentada() {
               <tr className="font-semibold text-navy">
                 <td className="py-2">TOTAL</td>
                 <td className="py-2 text-right tabular-nums">{brl(totais.previsto)}</td>
-                <td className="py-2 text-right tabular-nums">{brl(totais.comprometido)}</td>
+
                 <td className="py-2 text-right tabular-nums">{brl(totais.realizado)}</td>
                 <td className="py-2 text-right tabular-nums">
                   {pct((totais.realizado / totais.previsto) * 100)}
