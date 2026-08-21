@@ -34,6 +34,18 @@ export function getPool(): Pool | null {
   return pool;
 }
 
+/** Exercício oficial (PAINEL_ANO_PADRAO) lido apenas no servidor. */
+export function anoPadraoConfigurado(): number {
+  const v = Number(process.env["PAINEL_ANO_PADRAO"]);
+  return Number.isFinite(v) && v >= 2000 && v <= 2100 ? Math.trunc(v) : new Date().getFullYear();
+}
+
+/** Último mês encerrado (PAINEL_MES_FECHADO). 0 = não configurado. */
+export function mesFechadoConfigurado(): number {
+  const v = Number(process.env["PAINEL_MES_FECHADO"]);
+  return Number.isFinite(v) && v >= 1 && v <= 12 ? Math.trunc(v) : 0;
+}
+
 export function bancoConfigurado() {
   return Boolean(process.env["DATABASE_URL"]);
 }
