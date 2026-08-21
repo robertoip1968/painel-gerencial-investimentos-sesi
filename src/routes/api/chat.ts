@@ -36,14 +36,17 @@ export const Route = createFileRoute("/api/chat")({
 
         const webhook = process.env["N8N_WEBHOOK_URL"];
         if (!webhook) {
+          // Configuração ausente não é falha de runtime: devolve 200 com aviso
+          // para o widget exibir a mensagem sem gerar erro 500 no app.
           return new Response(
             JSON.stringify({
               error:
                 "Fluxo N8N não configurado. Cadastre o secret N8N_WEBHOOK_URL com a URL do webhook de produção.",
             }),
-            { status: 500, headers: json() },
+            { status: 200, headers: json() },
           );
         }
+
 
         const body = (await request.json()) as Corpo;
         if (!body?.pergunta?.trim()) {
