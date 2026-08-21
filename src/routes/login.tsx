@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Lock, LogIn, User } from "lucide-react";
 import { entrar, getSessao } from "@/lib/auth-local";
-import bgAsset from "@/assets/sesi-login.png.asset.json";
-import logoAsset from "@/assets/fiemt-sesi-logo.png.asset.json";
+const BG_URL = "/assets/sesi-login.png";
+const LOGO_URL = "/assets/fiemt-sesi-logo.webp";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -61,7 +61,7 @@ function LoginPage() {
     <div className="relative min-h-screen bg-navy text-navy-foreground">
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${bgAsset.url})` }}
+        style={{ backgroundImage: `url(${BG_URL})` }}
         aria-hidden
       />
       <div className="pointer-events-none absolute inset-0 bg-navy/80" aria-hidden />
@@ -69,7 +69,7 @@ function LoginPage() {
       <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
 
         <img
-          src={logoAsset.url}
+          src={LOGO_URL}
           alt="FIEMT SESI MT – 50 anos"
           className="relative h-20 w-auto self-start rounded-lg bg-white px-4 py-3 object-contain"
         />
@@ -90,7 +90,7 @@ function LoginPage() {
       <div className="flex items-center justify-center p-6 text-foreground">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 flex justify-center lg:hidden">
-            <img src={logoAsset.url} alt="FIEMT SESI MT – 50 anos" className="h-12 w-auto object-contain" />
+            <img src={LOGO_URL} alt="FIEMT SESI MT – 50 anos" className="h-12 w-auto object-contain" />
           </div>
           <h1 className="text-xl font-bold uppercase tracking-wide text-navy">Acesso ao painel</h1>
           <p className="mt-1 text-sm text-muted-foreground">

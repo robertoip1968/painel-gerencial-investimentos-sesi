@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import logoAsset from "@/assets/fiemt-sesi-logo.png.asset.json";
 import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
@@ -39,6 +38,7 @@ import {
   contasPct,
   maioresSaldos,
   mesBase,
+  mesUltimoDado,
   mi,
   pctFmt,
   respostasFrom,
@@ -50,6 +50,8 @@ import { TODOS, opcoes, type Filtros } from "@/lib/facts";
 
 
 
+const LOGO_URL = "/assets/fiemt-sesi-logo.webp";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -57,7 +59,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Visão executiva da execução orçamentária de investimentos do SESI MT — previsto, realizado, forecast e riscos, Jan a Jun/2026.",
+          "Visão executiva da execução orçamentária de investimentos do SESI MT — previsto, realizado, forecast e riscos por centro de custo, item e conta contábil.",
       },
       { property: "og:title", content: "Painel Gerencial de Investimentos – SESI MT" },
       {
@@ -191,7 +193,8 @@ function DashboardInner() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(true);
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
-  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
+  const mUlt = mesUltimoDado(dataset);
+  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mUlt - 1)]}`;
   const num = (k: keyof Filtros) => (v: string) => setFiltro(k as "mesIni", Number(v));
 
   const serie = serieAcumulada(dataset);
@@ -222,7 +225,7 @@ function DashboardInner() {
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
         <div className="flex items-center gap-4">
           <img
-            src={logoAsset.url}
+            src={LOGO_URL}
             alt="FIEMT SESI MT – 50 anos"
             className="h-11 w-auto rounded-md bg-white px-2 py-1"
           />

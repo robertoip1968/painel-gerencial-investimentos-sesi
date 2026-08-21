@@ -229,13 +229,13 @@ export const respostasRapidas = [
   {
     pergunta: "Quanto já realizamos?",
     resposta: "R$ 11,70 mi",
-    detalhe: "22,19% do previsto (Jan-Jun)",
+    detalhe: "22,19% do previsto no período apurado",
     tone: "ok" as const,
   },
   {
     pergunta: "Quanto falta executar?",
     resposta: "R$ 41,03 mi",
-    detalhe: "77,81% em 6 meses restantes",
+    detalhe: "77,81% do orçamento nos meses restantes",
     tone: "warn" as const,
   },
   {
