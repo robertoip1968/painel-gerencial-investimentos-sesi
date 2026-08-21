@@ -31,19 +31,29 @@ function LoginPage() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
-    if (getSessao()) void navigate({ to: "/", replace: true });
+    void getSessao().then((s) => {
+      if (s) void navigate({ to: "/", replace: true });
+    });
   }, [navigate]);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const u = usuario.trim();
     if (!u || !senha) {
       setErro("Informe usuário e senha.");
       return;
     }
-    entrar(u);
+    setErro("");
+    setEnviando(true);
+    const r = await entrar(u, senha);
+    setEnviando(false);
+    if (!r.ok) {
+      setErro(r.erro ?? "Usuário ou senha inválidos.");
+      return;
+    }
     void navigate({ to: "/", replace: true });
   }
 
@@ -127,15 +137,15 @@ function LoginPage() {
 
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
+              disabled={enviando}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-60"
             >
-              <LogIn className="size-4" /> Entrar
+              <LogIn className="size-4" /> {enviando ? "Entrando…" : "Entrar"}
             </button>
           </form>
 
           <p className="mt-6 text-xs text-muted-foreground">
-            Acesso provisório: qualquer usuário e senha são aceitos. O cadastro de usuários será
-            habilitado em breve.
+            Acesso restrito. Credenciais validadas no servidor do SESI/MT.
           </p>
         </div>
       </div>

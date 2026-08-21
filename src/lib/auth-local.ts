@@ -1,21 +1,37 @@
-const KEY = "sesimt-sessao";
+/**
+ * Cliente da autenticação server-side (cookie HttpOnly).
+ * Nenhuma credencial é guardada no navegador.
+ */
 
-export type Sessao = { usuario: string; em: string };
+export type Sessao = { usuario: string };
 
-export function getSessao(): Sessao | null {
-  if (typeof window === "undefined") return null;
+export async function getSessao(): Promise<Sessao | null> {
   try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Sessao) : null;
+    const r = await fetch("/api/auth/sessao", { credentials: "same-origin" });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { usuario: string | null };
+    return j.usuario ? { usuario: j.usuario } : null;
   } catch {
     return null;
   }
 }
 
-export function entrar(usuario: string) {
-  window.localStorage.setItem(KEY, JSON.stringify({ usuario, em: new Date().toISOString() }));
+export async function entrar(usuario: string, senha: string): Promise<{ ok: boolean; erro?: string }> {
+  try {
+    const r = await fetch("/api/auth/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuario, senha }),
+    });
+    const j = (await r.json().catch(() => ({}))) as { error?: string };
+    if (!r.ok) return { ok: false, erro: j.error ?? "Não foi possível entrar." };
+    return { ok: true };
+  } catch {
+    return { ok: false, erro: "Servidor indisponível." };
+  }
 }
 
-export function sair() {
-  window.localStorage.removeItem(KEY);
+export async function sair() {
+  await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
 }

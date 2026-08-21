@@ -34,6 +34,9 @@ export const Route = createFileRoute("/api/chat")({
           ...headers,
         });
 
+        const { sessaoDaRequisicao, respostaNaoAutorizado } = await import("@/lib/auth.server");
+        if (!sessaoDaRequisicao(request)) return respostaNaoAutorizado();
+
         const webhook = process.env["N8N_WEBHOOK_URL"];
         if (!webhook) {
           // Configuração ausente não é falha de runtime: devolve 200 com aviso

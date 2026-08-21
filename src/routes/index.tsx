@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
-import { CsvUpload } from "@/components/dashboard/csv-upload";
+import { AtualizarBase } from "@/components/dashboard/atualizar-base";
 import { LancamentosConta } from "@/components/dashboard/lancamentos";
 import { AssistenteVirtual } from "@/components/dashboard/assistente";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
@@ -154,11 +154,14 @@ function Dashboard() {
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
-    if (getSessao()) setOk(true);
-    else void navigate({ to: "/login", replace: true });
+    void getSessao().then((s) => {
+      if (s) setOk(true);
+      else void navigate({ to: "/login", replace: true });
+    });
   }, [navigate]);
 
   if (!ok) return <div className="min-h-screen bg-panel" />;
+
 
   return (
     <DatasetProvider>
@@ -173,7 +176,8 @@ function DashboardInner() {
   const navigate = useNavigate();
   const {
     dataset,
-    isUpload,
+    erroDados,
+    fonte,
     filtros,
     setFiltro,
     limparFiltros,
@@ -212,7 +216,7 @@ function DashboardInner() {
               Painel Gerencial de Investimentos – SESI MT
             </h1>
             <p className="text-sm text-navy-foreground/70">
-              Visão Executiva – {periodo}/{ANO} • {isUpload ? dataset.fileName : "Base SHIFT 2026"}
+              Visão Executiva – {periodo}/{ANO} • {fonte === "db" ? "PostgreSQL • dash_sesi" : "Base SHIFT 2026"}
             </p>
           </div>
         </div>
@@ -244,7 +248,7 @@ function DashboardInner() {
           <button
             type="button"
             onClick={() => {
-              sair();
+              void sair();
               void navigate({ to: "/login", replace: true });
             }}
             className="flex items-center gap-2 rounded-md border border-navy-foreground/25 px-3 py-2 text-sm font-medium text-navy-foreground/80 transition-colors hover:bg-navy-foreground/10"
@@ -267,57 +271,62 @@ function DashboardInner() {
             value={String(filtros.mesIni)}
             onChange={num("mesIni")}
             options={mesOpts}
-            disabled={isUpload}
           />
           <Filtro
             label="Mês final"
             value={String(filtros.mesFim)}
             onChange={num("mesFim")}
             options={mesOpts}
-            disabled={isUpload}
           />
           <Filtro
             label="Centro de Custo"
             value={filtros.cc}
             onChange={(v) => setFiltro("cc", v)}
             options={listOpts(opcoes.cc, "Todos")}
-            disabled={isUpload}
           />
           <Filtro
             label="Item Contábil"
             value={filtros.item}
             onChange={(v) => setFiltro("item", v)}
             options={listOpts(opcoes.item, "Todos")}
-            disabled={isUpload}
           />
           <Filtro
             label="Conta Contábil"
             value={filtros.conta}
             onChange={(v) => setFiltro("conta", v)}
             options={listOpts(opcoes.conta, "Todas")}
-            disabled={isUpload}
           />
           <div className="flex items-center gap-3 sm:col-span-3 lg:col-span-6">
             <button
               type="button"
               onClick={limparFiltros}
-              disabled={isUpload || !temFiltro}
+              disabled={!temFiltro}
               className="flex items-center justify-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-50"
             >
               <RotateCcw className="size-4" /> Limpar filtros
             </button>
             <span className="text-xs text-muted-foreground">
-              {isUpload
-                ? "Filtros indisponíveis para CSV enviado."
-                : temFiltro
+              {temFiltro
                   ? `Filtro ativo • ${dataset.linhas.toLocaleString("pt-BR")} lançamentos`
                   : "Nenhum filtro aplicado."}
             </span>
           </div>
         </div>
 
+        {erroDados ? (
+          <div className="flex items-start gap-2 rounded-lg border border-crit/40 bg-crit/10 p-4 text-sm text-crit">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="font-semibold">{erroDados}</p>
+              <p className="text-crit/80">
+                Os indicadores permanecem zerados até que os dados oficiais sejam carregados.
+              </p>
+            </div>
+          </div>
+        ) : null}
 
-        {import.meta.env.DEV ? <CsvUpload /> : null}
+        <AtualizarBase />
+
 
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
@@ -678,7 +687,7 @@ function DashboardInner() {
                 <Database className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Fonte de dados:</p>
-                  <p className="text-muted-foreground">{isUpload ? dataset.fileName : "SHIFT – Gestão Corporativa"}</p>
+                  <p className="text-muted-foreground">{fonte === "db" ? "PostgreSQL – dash_sesi" : "SHIFT – Gestão Corporativa"}</p>
                 </div>
               </div>
               <div className="flex gap-2">

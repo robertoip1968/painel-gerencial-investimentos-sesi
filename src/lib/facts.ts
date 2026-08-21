@@ -65,6 +65,31 @@ export function aplicarFatos(novo: FatosPayload) {
   FATOS_FILE = novo.fileName;
 }
 
+const blocoVazio = (): Bloco => ({
+  n: 0,
+  mes: [],
+  cc: [],
+  item: [],
+  conta: [],
+  linhas: [],
+  previsto: [],
+  realizado: [],
+});
+
+/** Payload sem dados — usado quando o Postgres está indisponível em produção. */
+export function vazio(): FatosPayload {
+  return {
+    ano: FATOS_ANO,
+    empresa: "02MT",
+    fileName: "Sem dados",
+    cc: [],
+    item: [],
+    conta: [],
+    despesa: blocoVazio(),
+    receita: blocoVazio(),
+  };
+}
+
 export function filtrosAtivos(f: Filtros) {
   return (
     f.mesIni !== 1 ||
