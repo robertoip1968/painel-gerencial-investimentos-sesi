@@ -289,6 +289,36 @@ export async function importarLancamentos(params: {
       );
     }
 
+    // Duplicidade no grão oficial: origem + empresa + ano + mês + CC + item + conta.
+    const duplicadas = await client.query(
+      `SELECT origem, cod_empresa, ano, mes,
+              coalesce(cod_centro_custo,'')   AS cod_centro_custo,
+              coalesce(cod_item_contabil,'')  AS cod_item_contabil,
+              coalesce(cod_conta_contabil,'') AS cod_conta_contabil,
+              count(*)::int AS quantidade
+         FROM dash_sesi.fin_shift_staging
+        WHERE importacao_id = $1
+        GROUP BY origem, cod_empresa, ano, mes,
+                 coalesce(cod_centro_custo,''),
+                 coalesce(cod_item_contabil,''),
+                 coalesce(cod_conta_contabil,'')
+       HAVING count(*) > 1
+        ORDER BY count(*) DESC
+        LIMIT 20`,
+      [importacaoId],
+    );
+    if (duplicadas.rowCount && duplicadas.rowCount > 0) {
+      detalhesErro = duplicadas.rows.map(
+        (d: Record<string, unknown>) =>
+          `${d["origem"]} | empresa ${d["cod_empresa"]} | ${d["ano"]}/${String(d["mes"]).padStart(2, "0")} | CC ${d["cod_centro_custo"] || "—"} | item ${d["cod_item_contabil"] || "—"} | conta ${d["cod_conta_contabil"] || "—"} → ${d["quantidade"]} ocorrências`,
+      );
+      throw new Error(
+        "Importação cancelada. Foram encontradas chaves duplicadas na base (grão oficial: origem + empresa + ano + mês + centro de custo + item + conta). Nenhuma alteração foi aplicada.",
+      );
+    }
+
+
+
     // substitui integralmente os exercícios presentes no arquivo
     await client.query(`DELETE FROM dash_sesi.lancamentos WHERE ano = ANY($1::smallint[])`, [anos]);
 
