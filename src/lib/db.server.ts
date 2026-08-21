@@ -216,6 +216,7 @@ export async function importarLancamentos(params: {
   const anos = [...new Set(params.linhas.map((l) => l.ano))].sort();
   let client: PoolClient | null = null;
   let importacaoId: number | null = null;
+  let detalhesErro: string[] | null = null;
 
   try {
     client = await p.connect();
@@ -382,7 +383,12 @@ export async function importarLancamentos(params: {
       }
     }
     console.error("Importação falhou:", msg);
-    return { ...base, importacaoId, erro: msg };
+    return {
+      ...base,
+      importacaoId,
+      erro: msg,
+      ...(detalhesErro ? { detalhes: detalhesErro } : {}),
+    };
   } finally {
     client?.release();
   }
