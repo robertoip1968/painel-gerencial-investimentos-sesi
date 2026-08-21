@@ -91,7 +91,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       risco,
       setRisco,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco, versao]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
