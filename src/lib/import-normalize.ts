@@ -7,23 +7,39 @@
 export type CampoPlanilha =
   | "ano"
   | "mes"
-  | "tipo"
-  | "empresa"
+  | "origem"
+  | "codEmpresa"
+  | "codCentroCusto"
   | "centroCusto"
+  | "codItem"
   | "item"
+  | "codConta"
   | "conta"
   | "grupoCC"
   | "previsto"
-  | "comprometido"
   | "realizado";
 
 export const ALIASES: Record<CampoPlanilha, string[]> = {
   ano: ["ano", "exercicio", "exercício", "ano exercicio", "competencia ano"],
   mes: ["mes", "mês", "competencia", "competência", "periodo", "período"],
-  tipo: ["tipo", "natureza lancamento", "tipo lancamento", "tipo de lancamento"],
-  empresa: ["empresa", "entidade", "regional"],
-  centroCusto: ["centro de custo", "centrocusto", "centro_custo", "cc", "unidade", "centro"],
+  // "origem" é o nome oficial da planilha SHIFT (RECEITA / DESPESA)
+  origem: ["origem", "tipo", "natureza lancamento", "tipo lancamento", "tipo de lancamento"],
+  codEmpresa: ["cod_empresa", "cod empresa", "codempresa", "empresa", "entidade", "regional"],
+  codCentroCusto: ["cod_centro_custo", "cod centro custo", "codcentrocusto", "cod cc"],
+  centroCusto: [
+    "nome_centro_custo",
+    "nome centro custo",
+    "centro de custo",
+    "centrocusto",
+    "centro_custo",
+    "cc",
+    "unidade",
+    "centro",
+  ],
+  codItem: ["cod_item_contabil", "cod item contabil", "coditemcontabil", "cod item"],
   item: [
+    "nome_item_contabil",
+    "nome item contabil",
     "item",
     "item de investimento",
     "iteminvestimento",
@@ -35,12 +51,22 @@ export const ALIASES: Record<CampoPlanilha, string[]> = {
     "projeto",
     "investimento",
   ],
-  conta: ["conta contabil", "conta contábil", "conta_contabil", "contacontabil", "conta", "natureza"],
-  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento", "origem"],
+  codConta: ["cod_conta_contabil", "cod conta contabil", "codcontacontabil", "cod conta"],
+  conta: [
+    "nome_conta_contabil",
+    "nome conta contabil",
+    "conta contabil",
+    "conta contábil",
+    "conta_contabil",
+    "contacontabil",
+    "conta",
+    "natureza",
+  ],
+  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento"],
   previsto: ["previsto", "orcado", "orçado", "orcamento", "orçamento", "valor previsto", "budget"],
-  comprometido: ["comprometido", "empenhado", "compromissado", "valor comprometido"],
   realizado: ["realizado", "executado", "pago", "valor realizado", "despesa"],
 };
+
 
 export const norm = (s: string) =>
   String(s ?? "")
@@ -147,15 +173,17 @@ export function csvParaMatriz(text: string): string[][] {
 // ------------- Normalização para persistência -------------
 
 export type LinhaNormalizada = {
+  origem: "DESPESA" | "RECEITA";
+  codEmpresa: string;
   ano: number;
   mes: number;
-  tipo: "DESPESA" | "RECEITA";
-  empresa: string;
+  codCentroCusto: string;
   centroCusto: string;
+  codItem: string;
   item: string;
+  codConta: string;
   conta: string;
   previsto: number;
-  comprometido: number;
   realizado: number;
 };
 
@@ -168,9 +196,19 @@ export type ResultadoNormalizacao = {
   colunasReconhecidas: CampoPlanilha[];
 };
 
+/** Origem só é aceita quando vier explícita na planilha (RECEITA ou DESPESA). */
+export function parseOrigem(v: string): "DESPESA" | "RECEITA" | null {
+  const s = norm(v);
+  if (!s) return null;
+  if (s.startsWith("rec")) return "RECEITA";
+  if (s.startsWith("desp")) return "DESPESA";
+  return null;
+}
+
 /**
  * Converte a matriz (cabeçalho + linhas) em lançamentos prontos para o banco.
- * Não inventa dados: linhas sem mês ou sem centro de custo são rejeitadas.
+ * Não inventa dados: origem, mês, ano e centro de custo precisam existir na
+ * planilha — nada é assumido por padrão.
  */
 export function normalizarMatriz(
   matriz: (string | number | null | undefined)[][],
@@ -180,14 +218,15 @@ export function normalizarMatriz(
   if (!cabecalho) throw new Error("Planilha sem cabeçalho.");
   const map = mapColumns(cabecalho.map((c) => String(c ?? "")));
 
-  if (map.previsto === undefined && map.realizado === undefined) {
+  const faltando: string[] = [];
+  if (map.origem === undefined) faltando.push("Origem (RECEITA/DESPESA)");
+  if (map.previsto === undefined && map.realizado === undefined)
+    faltando.push("Previsto e/ou Realizado");
+  if (map.centroCusto === undefined && map.codCentroCusto === undefined)
+    faltando.push("Centro de Custo");
+  if (faltando.length) {
     throw new Error(
-      `Não encontrei colunas de valores. Colunas lidas: ${cabecalho.join(", ")}. Esperado algo como "Previsto", "Comprometido", "Realizado".`,
-    );
-  }
-  if (map.centroCusto === undefined) {
-    throw new Error(
-      `Não encontrei a coluna de Centro de Custo. Colunas lidas: ${cabecalho.join(", ")}.`,
+      `Colunas obrigatórias ausentes: ${faltando.join("; ")}. Colunas lidas: ${cabecalho.join(", ")}.`,
     );
   }
 
@@ -201,7 +240,14 @@ export function normalizarMatriz(
     const numeroLinha = i + 2; // 1 = cabeçalho
     if (c.every((v) => String(v ?? "").trim() === "")) return;
 
-    const centroCusto = get(c, map.centroCusto);
+    const origem = parseOrigem(get(c, map.origem));
+    if (!origem) {
+      rejeitadas.push({ linha: numeroLinha, motivo: "Origem ausente ou fora de RECEITA/DESPESA" });
+      return;
+    }
+
+    const codCentroCusto = get(c, map.codCentroCusto);
+    const centroCusto = get(c, map.centroCusto) || codCentroCusto;
     if (!centroCusto) {
       rejeitadas.push({ linha: numeroLinha, motivo: "Centro de custo ausente" });
       return;
@@ -220,19 +266,21 @@ export function normalizarMatriz(
       return;
     }
 
-    const tipoBruto = norm(get(c, map.tipo));
-    const tipo: "DESPESA" | "RECEITA" = tipoBruto.startsWith("rec") ? "RECEITA" : "DESPESA";
+    const codItem = get(c, map.codItem);
+    const codConta = get(c, map.codConta);
 
     linhas.push({
+      origem,
+      codEmpresa: get(c, map.codEmpresa) || "02MT",
       ano,
       mes,
-      tipo,
-      empresa: get(c, map.empresa) || "02MT",
+      codCentroCusto,
       centroCusto,
-      item: get(c, map.item) || "Não informado",
-      conta: get(c, map.conta) || "Não informado",
+      codItem,
+      item: get(c, map.item) || codItem || "Não informado",
+      codConta,
+      conta: get(c, map.conta) || codConta || "Não informado",
       previsto: parseNumber(get(c, map.previsto)),
-      comprometido: parseNumber(get(c, map.comprometido)),
       realizado: parseNumber(get(c, map.realizado)),
     });
   });
@@ -244,3 +292,4 @@ export function normalizarMatriz(
     colunasReconhecidas: Object.keys(map) as CampoPlanilha[],
   };
 }
+

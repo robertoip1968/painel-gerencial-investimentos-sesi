@@ -269,7 +269,9 @@ export type SegRow = {
   nome: string;
   grupo: string;
   previsto: number;
-  comprometido: number;
+  /** Legado: a planilha oficial SHIFT não traz "comprometido". */
+  comprometido?: number;
+
   realizado: number;
 };
 

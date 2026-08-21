@@ -62,7 +62,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [filtros, setFiltros] = useState<Filtros>(filtrosPadrao);
   const [risco, setRisco] = useState<RiscoFiltro>(null);
   const [versao, setVersao] = useState(0);
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
   const [erroDados, setErroDados] = useState<string | null>(null);
   const [fonte, setFonte] = useState<Ctx["fonte"]>("local");
 

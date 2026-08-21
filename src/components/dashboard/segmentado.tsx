@@ -17,7 +17,6 @@ function useMounted() {
 
 function derive(r: SegRow, meta: number) {
   const saldo = r.previsto - r.realizado;
-  const disponivel = r.previsto - r.comprometido - r.realizado;
   const execPct = r.previsto > 0 ? (r.realizado / r.previsto) * 100 : 0;
   const desvio = execPct - meta; // p.p. contra a meta linear do período
   const situacao =
@@ -28,8 +27,9 @@ function derive(r: SegRow, meta: number) {
         : execPct >= meta * 0.6
           ? "warn"
           : "crit";
-  return { ...r, saldo, disponivel, execPct, desvio, situacao };
+  return { ...r, saldo, execPct, desvio, situacao };
 }
+
 
 const dotClass = {
   ok: "bg-ok",
@@ -108,11 +108,11 @@ export function VisaoSegmentada() {
     (acc, r) => ({
       previsto: acc.previsto + r.previsto,
       realizado: acc.realizado + r.realizado,
-      comprometido: acc.comprometido + r.comprometido,
       saldo: acc.saldo + r.saldo,
     }),
-    { previsto: 0, realizado: 0, comprometido: 0, saldo: 0 },
+    { previsto: 0, realizado: 0, saldo: 0 },
   );
+
 
   const chartData = rows.slice(0, 8).map((r) => ({
     nome: r.nome.length > 26 ? `${r.nome.slice(0, 25)}…` : r.nome,
@@ -234,7 +234,7 @@ export function VisaoSegmentada() {
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="py-2 font-medium">{ativa.colLabel}</th>
                 <th className="py-2 text-right font-medium">Previsto</th>
-                <th className="py-2 text-right font-medium">Comprometido</th>
+
                 <th className="py-2 text-right font-medium">Realizado</th>
                 <th className="py-2 text-right font-medium">% Exec.</th>
                 <th className="py-2 text-right font-medium">Desvio (p.p.)</th>
@@ -250,7 +250,7 @@ export function VisaoSegmentada() {
                     <span className="text-[10px] text-muted-foreground">{r.grupo}</span>
                   </td>
                   <td className="py-1.5 text-right tabular-nums">{brl(r.previsto)}</td>
-                  <td className="py-1.5 text-right tabular-nums">{brl(r.comprometido)}</td>
+
                   <td className="py-1.5 text-right tabular-nums">{brl(r.realizado)}</td>
                   <td className="py-1.5 text-right tabular-nums">{pct(r.execPct)}</td>
                   <td
@@ -278,7 +278,7 @@ export function VisaoSegmentada() {
               <tr className="font-semibold text-navy">
                 <td className="py-2">TOTAL</td>
                 <td className="py-2 text-right tabular-nums">{brl(totais.previsto)}</td>
-                <td className="py-2 text-right tabular-nums">{brl(totais.comprometido)}</td>
+
                 <td className="py-2 text-right tabular-nums">{brl(totais.realizado)}</td>
                 <td className="py-2 text-right tabular-nums">
                   {pct((totais.realizado / totais.previsto) * 100)}

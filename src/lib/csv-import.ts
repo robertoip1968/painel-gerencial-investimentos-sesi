@@ -15,7 +15,6 @@ export type RawRow = {
   grupoCC: string;
   mes: string;
   previsto: number;
-  comprometido: number;
   realizado: number;
 };
 
@@ -26,7 +25,6 @@ export type Dataset = {
   segItem: SegRow[];
   segConta: SegRow[];
   previsto: number;
-  comprometido: number;
   realizado: number;
   mensal?: { mes: number; previsto: number; realizado: number }[];
 };
@@ -35,14 +33,14 @@ function agrupar(rows: RawRow[], key: (r: RawRow) => string, grupo: (r: RawRow) 
   const m = new Map<string, SegRow>();
   for (const r of rows) {
     const nome = key(r) || "Não informado";
-    const cur = m.get(nome) ?? { nome, grupo: grupo(r) || "—", previsto: 0, comprometido: 0, realizado: 0 };
+    const cur = m.get(nome) ?? { nome, grupo: grupo(r) || "—", previsto: 0, realizado: 0 };
     cur.previsto += r.previsto;
-    cur.comprometido += r.comprometido;
     cur.realizado += r.realizado;
     m.set(nome, cur);
   }
   return [...m.values()].sort((a, b) => b.previsto - a.previsto);
 }
+
 
 /** Leitura rápida de CSV para pré-visualização em DEV (não persiste nada). */
 export function parseDashboardCsv(text: string, fileName: string): Dataset {
@@ -64,18 +62,17 @@ export function parseDashboardCsv(text: string, fileName: string): Dataset {
     grupoCC: get(c, map.grupoCC),
     mes: get(c, map.mes),
     previsto: parseNumber(get(c, map.previsto)),
-    comprometido: parseNumber(get(c, map.comprometido)),
     realizado: parseNumber(get(c, map.realizado)),
   }));
 
   const totals = rows.reduce(
     (a, r) => ({
       previsto: a.previsto + r.previsto,
-      comprometido: a.comprometido + r.comprometido,
       realizado: a.realizado + r.realizado,
     }),
-    { previsto: 0, comprometido: 0, realizado: 0 },
+    { previsto: 0, realizado: 0 },
   );
+
 
   const mensal = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, previsto: 0, realizado: 0 }));
   let temMes = false;

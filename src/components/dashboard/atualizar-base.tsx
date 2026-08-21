@@ -65,10 +65,11 @@ export function AtualizarBase() {
             </span>
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Envie a planilha SHIFT (.xlsx, .xls ou .csv) com Centro de Custo, Item, Conta Contábil,
-            Mês, Previsto, Comprometido e Realizado. Os dados são validados e gravados no banco em
-            uma única transação.
+            Envie a planilha SHIFT (.xlsx, .xls ou .csv) com Origem, Cód. Empresa, Ano, Mês, Centro
+            de Custo, Item Contábil, Conta Contábil, Previsto e Realizado. A carga é tudo-ou-nada:
+            qualquer linha inválida cancela a importação e a base anterior é mantida.
           </p>
+
         </div>
         <div className="flex items-center gap-2">
           <input

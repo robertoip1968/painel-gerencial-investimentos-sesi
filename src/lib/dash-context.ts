@@ -52,10 +52,12 @@ LANÇAMENTOS NO RECORTE: ${d.linhas.toLocaleString("pt-BR")}
 
 DESPESA (recorte atual)
 - Previsto: R$ ${n2(d.previsto)} mi
-- Comprometido: R$ ${n2(d.comprometido)} mi
 - Realizado: R$ ${n2(d.realizado)} mi (${pc(d.realizado, d.previsto)}% do previsto)
 - Saldo a executar: R$ ${n2(saldo)} mi
+- Comprometido: não disponível na base oficial (não use esse conceito na resposta)
+- Meses encerrados considerados: ${MESES[0]}–${MESES[mb - 1]} (1 a ${mb}); meses ${mb + 1} a 12 ainda não executados
 - Último mês com execução: ${MESES[mb - 1]} (mês ${mb}); meta linear do período: ${meta.toFixed(1)}%
+
 - Ritmo médio realizado: R$ ${n2(media)} mi/mês
 - Ritmo necessário para executar 100%: R$ ${n2(necessario)} mi/mês em ${restantes} meses
 - Forecast de encerramento (ritmo atual x 12): R$ ${n2(fc)} mi (${pc(fc, d.previsto)}% do previsto)
