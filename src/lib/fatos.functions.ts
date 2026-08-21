@@ -15,6 +15,16 @@ export type CargaFatosPainel = {
  */
 export const carregarFatos = createServerFn({ method: "GET" }).handler(
   async (): Promise<CargaFatosPainel> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { sessaoDaRequisicao } = await import("@/lib/auth.server");
+    const request = getRequest();
+    if (!request || !sessaoDaRequisicao(request)) {
+      return {
+        fonte: "indisponivel",
+        payload: null,
+        mensagem: "Sessão expirada. Entre novamente para carregar os dados oficiais.",
+      };
+    }
     const { carregarFatosParaPainel } = await import("@/lib/db.server");
     const r = await carregarFatosParaPainel(FATOS_ANO);
     return {
@@ -24,3 +34,4 @@ export const carregarFatos = createServerFn({ method: "GET" }).handler(
     };
   },
 );
+

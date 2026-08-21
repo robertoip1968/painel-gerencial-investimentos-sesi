@@ -176,8 +176,10 @@ function DashboardInner() {
   const navigate = useNavigate();
   const {
     dataset,
+    carregando,
     erroDados,
     fonte,
+
     filtros,
     setFiltro,
     limparFiltros,
@@ -313,7 +315,14 @@ function DashboardInner() {
           </div>
         </div>
 
-        {erroDados ? (
+        {carregando ? (
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+            <span className="size-3 animate-pulse rounded-full bg-brand" />
+            Carregando dados oficiais do PostgreSQL…
+          </div>
+        ) : null}
+
+        {!carregando && erroDados ? (
           <div className="flex items-start gap-2 rounded-lg border border-crit/40 bg-crit/10 p-4 text-sm text-crit">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" />
             <div>
@@ -324,6 +333,7 @@ function DashboardInner() {
             </div>
           </div>
         ) : null}
+
 
         <AtualizarBase />
 
