@@ -203,7 +203,21 @@ function DashboardInner() {
   const { media, necessario } = ritmos(dataset);
   const execPct = dataset.previsto > 0 ? (dataset.realizado / dataset.previsto) * 100 : 0;
   const saldoTop = saldos.reduce((a, s) => a + s.saldo, 0);
+
+  // Em produção nenhum KPI/gráfico é renderizado enquanto o PostgreSQL carrega.
+  if (!import.meta.env.DEV && carregando) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-panel p-6 text-foreground">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-6 py-5 text-sm text-muted-foreground shadow-sm">
+          <span className="size-3 animate-pulse rounded-full bg-brand" />
+          Carregando dados oficiais…
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen bg-panel pb-0 text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-4 bg-navy px-6 py-4 text-navy-foreground">
         <div className="flex items-center gap-4">
