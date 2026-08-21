@@ -145,4 +145,5 @@ FROM dash_sesi.lancamentos
 GROUP BY ano, origem;
 
 COMMENT ON VIEW dash_sesi.vw_kpis IS 'KPIs consolidados do exercício por origem (DESPESA/RECEITA).';
+COMMENT ON COLUMN dash_sesi.vw_kpis.ultimo_mes_com_realizado IS 'Último mês com realizado <> 0. NÃO representa mês encerrado — o mês fechado oficial vem de PAINEL_MES_FECHADO na aplicação.';
 
