@@ -84,6 +84,24 @@ export const Route = createFileRoute("/api/importar")({
           );
         }
 
+        // Tudo ou nada: qualquer linha inválida cancela a importação inteira.
+        if (normalizado.rejeitadas.length > 0) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              arquivo: nome,
+              linhasEncontradas: normalizado.total,
+              linhasImportadas: 0,
+              linhasRejeitadas: normalizado.rejeitadas.length,
+              error: `Importação cancelada: ${normalizado.rejeitadas.length} de ${normalizado.total} linha(s) não passaram na validação. A base anterior foi mantida.`,
+              detalhes: normalizado.rejeitadas
+                .slice(0, 20)
+                .map((r) => `Linha ${r.linha}: ${r.motivo}`),
+            }),
+            { status: 422, headers: json },
+          );
+        }
+
         const { importarLancamentos } = await import("@/lib/db.server");
         const resultado = await importarLancamentos({
           arquivo: nome,
@@ -92,6 +110,7 @@ export const Route = createFileRoute("/api/importar")({
           rejeitadas: normalizado.rejeitadas,
           totalLidas: normalizado.total,
         });
+
 
         return new Response(JSON.stringify(resultado), {
           status: resultado.ok ? 200 : 422,
