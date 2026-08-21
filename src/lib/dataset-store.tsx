@@ -51,6 +51,22 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [upload, setUpload] = useState<Dataset | null>(null);
   const [filtros, setFiltros] = useState<Filtros>(filtrosPadrao);
   const [risco, setRisco] = useState<RiscoFiltro>(null);
+  const [versao, setVersao] = useState(0);
+
+  // Se houver um Postgres configurado (DATABASE_URL), os fatos vêm do banco.
+  useEffect(() => {
+    let ativo = true;
+    void carregarFatos()
+      .then((novo) => {
+        if (!ativo || !novo) return;
+        aplicarFatos(novo);
+        setVersao((v) => v + 1);
+      })
+      .catch(() => {});
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const setFiltro = useCallback(
     <K extends keyof Filtros>(k: K, v: Filtros[K]) => setFiltros((f) => ({ ...f, [k]: v })),
