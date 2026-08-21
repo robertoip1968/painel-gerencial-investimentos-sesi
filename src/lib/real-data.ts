@@ -29,6 +29,21 @@ export function mesBase(_d?: Dataset) {
   return last || 6;
 }
 
+/** Último mês com realizado registrado na base (pode ser um mês PARCIAL). */
+export function ultimoMesComRealizado(d?: Dataset) {
+  const m = d?.mensal ?? [];
+  let last = 0;
+  m.forEach((x) => {
+    if (x.realizado !== 0) last = x.mes;
+  });
+  return last;
+}
+
+/** Último mês coberto pelos dados (fechado ou parcial), para textos de período. */
+export function mesUltimoDado(d?: Dataset) {
+  return Math.max(mesBase(d), ultimoMesComRealizado(d));
+}
+
 /** Realizado acumulado somente nos meses ENCERRADOS. */
 export function realizadoFechado(d: Dataset) {
   const mb = mesBase(d);

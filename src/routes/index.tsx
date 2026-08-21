@@ -38,6 +38,7 @@ import {
   contasPct,
   maioresSaldos,
   mesBase,
+  mesUltimoDado,
   mi,
   pctFmt,
   respostasFrom,
@@ -192,7 +193,8 @@ function DashboardInner() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(true);
   const kpis = kpisFromDataset(dataset);
   const mb = mesBase(dataset);
-  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mb - 1)]}`;
+  const mUlt = mesUltimoDado(dataset);
+  const periodo = `${MESES[filtros.mesIni - 1]} - ${MESES[Math.max(filtros.mesIni - 1, mUlt - 1)]}`;
   const num = (k: keyof Filtros) => (v: string) => setFiltro(k as "mesIni", Number(v));
 
   const serie = serieAcumulada(dataset);
