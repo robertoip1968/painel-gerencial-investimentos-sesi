@@ -4,8 +4,11 @@ import type { LinhaNormalizada } from "@/lib/import-normalize";
 export type LinhaFato = {
   tipo: "DESPESA" | "RECEITA";
   mes: number;
+  cod_centro_custo: string | null;
   centro_custo: string;
+  cod_item_contabil: string | null;
   item_contabil: string;
+  cod_conta_contabil: string | null;
   conta_contabil: string;
   linhas: number;
   previsto: number;
@@ -48,7 +51,10 @@ export async function pingBanco(): Promise<boolean> {
 }
 
 const SQL_FATOS = `
-  SELECT tipo, mes, centro_custo, item_contabil, conta_contabil,
+  SELECT tipo, mes,
+         cod_centro_custo, centro_custo,
+         cod_item_contabil, item_contabil,
+         cod_conta_contabil, conta_contabil,
          linhas::int AS linhas,
          previsto::float8 AS previsto,
          realizado::float8 AS realizado
@@ -88,14 +94,38 @@ type BlocoDb = {
 
 /** Converte as linhas da view no payload comprimido consumido pelo painel. */
 export function montarPayload(ano: number, rows: LinhaFato[]): FatosPayloadDb {
+  // Dicionários indexados pelo GRÃO (código + nome). Códigos diferentes nunca
+  // são fundidos só porque o nome é igual; nomes repetidos ganham o código no rótulo.
   const cc: string[] = [];
   const item: string[] = [];
   const conta: string[] = [];
-  const idx = (list: string[], v: string) => {
-    const i = list.indexOf(v);
-    if (i >= 0) return i;
-    list.push(v);
-    return list.length - 1;
+  const chaves: Record<"cc" | "item" | "conta", Map<string, number>> = {
+    cc: new Map(),
+    item: new Map(),
+    conta: new Map(),
+  };
+  const nomes: Record<"cc" | "item" | "conta", Map<string, number>> = {
+    cc: new Map(),
+    item: new Map(),
+    conta: new Map(),
+  };
+  const idx = (
+    dim: "cc" | "item" | "conta",
+    list: string[],
+    cod: string | null | undefined,
+    nome: string,
+  ) => {
+    const codigo = (cod ?? "").trim();
+    const chave = `${codigo}\u0000${nome}`;
+    const achado = chaves[dim].get(chave);
+    if (achado !== undefined) return achado;
+    const jaExiste = nomes[dim].get(nome);
+    const rotulo = jaExiste !== undefined && codigo ? `${nome} (${codigo})` : nome;
+    list.push(rotulo);
+    const i = list.length - 1;
+    chaves[dim].set(chave, i);
+    if (jaExiste === undefined) nomes[dim].set(nome, i);
+    return i;
   };
   const bloco = (): BlocoDb => ({
     n: 0,
@@ -113,9 +143,9 @@ export function montarPayload(ano: number, rows: LinhaFato[]): FatosPayloadDb {
   for (const r of rows) {
     const b = r.tipo === "RECEITA" ? receita : despesa;
     b.mes.push(r.mes);
-    b.cc.push(idx(cc, r.centro_custo));
-    b.item.push(idx(item, r.item_contabil));
-    b.conta.push(idx(conta, r.conta_contabil));
+    b.cc.push(idx("cc", cc, r.cod_centro_custo, r.centro_custo));
+    b.item.push(idx("item", item, r.cod_item_contabil, r.item_contabil));
+    b.conta.push(idx("conta", conta, r.cod_conta_contabil, r.conta_contabil));
     b.linhas.push(r.linhas);
     b.previsto.push(Number(r.previsto));
     b.realizado.push(Number(r.realizado));
