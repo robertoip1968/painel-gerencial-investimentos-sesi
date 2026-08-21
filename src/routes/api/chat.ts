@@ -1,43 +1,114 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+
+type Corpo = {
+  pergunta: string;
+  contexto?: string;
+  filtros?: Record<string, unknown>;
+  historico?: { role: "user" | "assistant"; text: string }[];
+};
+
+/** Extrai o texto da resposta do fluxo N8N, aceitando os formatos mais comuns. */
+function extrairResposta(payload: unknown): string | null {
+  if (typeof payload === "string") return payload.trim() || null;
+  if (Array.isArray(payload)) return payload.length ? extrairResposta(payload[0]) : null;
+  if (payload && typeof payload === "object") {
+    const o = payload as Record<string, unknown>;
+    for (const k of ["resposta", "output", "text", "message", "answer", "reply", "result"]) {
+      const v = o[k];
+      if (typeof v === "string" && v.trim()) return v.trim();
+      if (v && typeof v === "object") {
+        const aninhado = extrairResposta(v);
+        if (aninhado) return aninhado;
+      }
+    }
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["LOVABLE_API_KEY"];
-        if (!key) {
-          return new Response(JSON.stringify({ error: "IA não configurada." }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
+        const json = (headers: Record<string, string> = {}) => ({
+          "Content-Type": "application/json",
+          ...headers,
+        });
+
+        const webhook = process.env["N8N_WEBHOOK_URL"];
+        if (!webhook) {
+          return new Response(
+            JSON.stringify({
+              error:
+                "Fluxo N8N não configurado. Cadastre o secret N8N_WEBHOOK_URL com a URL do webhook de produção.",
+            }),
+            { status: 500, headers: json() },
+          );
+        }
+
+        const body = (await request.json()) as Corpo;
+        if (!body?.pergunta?.trim()) {
+          return new Response(JSON.stringify({ error: "Pergunta vazia." }), {
+            status: 400,
+            headers: json(),
           });
         }
 
-        const body = (await request.json()) as { messages: UIMessage[]; contexto?: string };
+        const auth = process.env["N8N_WEBHOOK_TOKEN"];
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 120_000);
 
-        const gateway = createOpenAICompatible({
-          name: "lovable",
-          baseURL: "https://ai.gateway.lovable.dev/v1",
-          headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-        });
+        try {
+          const resp = await fetch(webhook, {
+            method: "POST",
+            headers: json(auth ? { Authorization: `Bearer ${auth}` } : {}),
+            body: JSON.stringify({
+              pergunta: body.pergunta,
+              contexto: body.contexto ?? "",
+              filtros: body.filtros ?? {},
+              historico: (body.historico ?? []).slice(-8),
+              origem: "painel-sesi-mt",
+              enviadoEm: new Date().toISOString(),
+            }),
+            signal: controller.signal,
+          });
 
-        const result = streamText({
-          model: gateway("google/gemini-3.7-flash"),
-          system: `Você é o analista virtual do Painel Gerencial de Investimentos do SESI/MT.
-Responda SEMPRE em português do Brasil, de forma objetiva e executiva (2 a 6 frases ou uma lista curta).
-Use exclusivamente os dados do recorte atual do painel fornecidos abaixo — nunca invente números.
-Se a pergunta exigir um dado que não está no contexto, diga o que falta e sugira o filtro a aplicar no painel.
-Formate valores como "R$ X,XX mi" e percentuais com uma casa decimal.
-Para projeções de encerramento e déficit, use o forecast (ritmo médio x 12) e explique a premissa em uma frase.
+          const bruto = await resp.text();
+          if (!resp.ok) {
+            console.error("N8N respondeu", resp.status, bruto.slice(0, 500));
+            return new Response(
+              JSON.stringify({ error: `O fluxo N8N retornou erro ${resp.status}.` }),
+              { status: 502, headers: json() },
+            );
+          }
 
-===== DADOS DO PAINEL =====
-${body.contexto ?? "(sem contexto disponível)"}
-===========================`,
-          messages: await convertToModelMessages(body.messages ?? []),
-        });
+          let payload: unknown = bruto;
+          try {
+            payload = JSON.parse(bruto);
+          } catch {
+            /* resposta em texto puro */
+          }
 
-        return result.toUIMessageStreamResponse();
+          const resposta = extrairResposta(payload);
+          if (!resposta) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  "O fluxo N8N respondeu sem texto. O nó final deve devolver um JSON com o campo \"resposta\".",
+              }),
+              { status: 502, headers: json() },
+            );
+          }
+
+          return new Response(JSON.stringify({ resposta }), { status: 200, headers: json() });
+        } catch (e) {
+          console.error("Falha ao chamar o fluxo N8N:", e);
+          return new Response(JSON.stringify({ error: "Não foi possível falar com o fluxo N8N." }), {
+            status: 502,
+            headers: json(),
+          });
+        } finally {
+          clearTimeout(timer);
+        }
       },
     },
   },
