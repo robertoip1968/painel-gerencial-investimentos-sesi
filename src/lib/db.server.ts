@@ -203,49 +203,45 @@ export async function importarLancamentos(params: {
       importacaoId,
     ]);
 
+    const COLS = 14;
     for (let i = 0; i < params.linhas.length; i += LOTE) {
       const lote = params.linhas.slice(i, i + LOTE);
       const valores: unknown[] = [];
       const trechos = lote.map((l, k) => {
-        const b = k * 11;
         valores.push(
           importacaoId,
           i + k + 2,
+          l.origem,
+          l.codEmpresa,
           String(l.ano),
           String(l.mes),
-          l.tipo,
-          l.empresa,
+          l.codCentroCusto,
           l.centroCusto,
+          l.codItem,
           l.item,
+          l.codConta,
           l.conta,
           String(l.previsto),
-          String(l.comprometido),
+          String(l.realizado),
         );
-        return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},$${b + 10},$${b + 11})`;
+        const b = k * COLS;
+        return `(${Array.from({ length: COLS }, (_, j) => `$${b + j + 1}`).join(",")})`;
       });
-      // realizado entra em um segundo passo para manter a lista de parâmetros curta
       await client.query(
         `INSERT INTO dash_sesi.fin_shift_staging
-           (importacao_id, linha_origem, ano, mes, tipo, empresa, centro_custo,
-            item_contabil, conta_contabil, previsto, comprometido)
+           (importacao_id, linha_origem, origem, cod_empresa, ano, mes,
+            cod_centro_custo, nome_centro_custo, cod_item_contabil, nome_item_contabil,
+            cod_conta_contabil, nome_conta_contabil, previsto, realizado)
          VALUES ${trechos.join(",")}`,
         valores,
-      );
-      await Promise.all(
-        lote.map((l, k) =>
-          client!.query(
-            `UPDATE dash_sesi.fin_shift_staging SET realizado = $1
-             WHERE importacao_id = $2 AND linha_origem = $3`,
-            [String(l.realizado), importacaoId, i + k + 2],
-          ),
-        ),
       );
     }
 
     const invalidas = await client.query(
       `SELECT count(*)::int AS n FROM dash_sesi.fin_shift_staging
         WHERE importacao_id = $1
-          AND (centro_custo IS NULL OR centro_custo = ''
+          AND (nome_centro_custo IS NULL OR nome_centro_custo = ''
+               OR origem NOT IN ('DESPESA','RECEITA')
                OR mes::int NOT BETWEEN 1 AND 12)`,
       [importacaoId],
     );
@@ -253,23 +249,42 @@ export async function importarLancamentos(params: {
       throw new Error(`${invalidas.rows[0].n} linha(s) inválida(s) detectada(s) na validação final.`);
     }
 
+    const conferencia = await client.query(
+      `SELECT count(*)::int AS n FROM dash_sesi.fin_shift_staging WHERE importacao_id = $1`,
+      [importacaoId],
+    );
+    if (conferencia.rows[0].n !== params.linhas.length) {
+      throw new Error(
+        `Divergência na carga: ${conferencia.rows[0].n} linha(s) em staging para ${params.linhas.length} linha(s) válidas do arquivo.`,
+      );
+    }
+
     // substitui integralmente os exercícios presentes no arquivo
     await client.query(`DELETE FROM dash_sesi.lancamentos WHERE ano = ANY($1::smallint[])`, [anos]);
 
     const promovidas = await client.query(
       `INSERT INTO dash_sesi.lancamentos
-         (ano, mes, tipo, empresa, centro_custo, item_contabil, conta_contabil,
-          previsto, comprometido, realizado, fonte, importacao_id)
-       SELECT ano::smallint, mes::smallint, tipo, empresa, centro_custo,
-              item_contabil, conta_contabil,
+         (origem, cod_empresa, ano, mes, cod_centro_custo, nome_centro_custo,
+          cod_item_contabil, nome_item_contabil, cod_conta_contabil, nome_conta_contabil,
+          previsto, realizado, fonte, importacao_id)
+       SELECT origem, cod_empresa, ano::smallint, mes::smallint,
+              cod_centro_custo, nome_centro_custo,
+              cod_item_contabil, nome_item_contabil,
+              cod_conta_contabil, nome_conta_contabil,
               coalesce(previsto,'0')::numeric,
-              coalesce(comprometido,'0')::numeric,
               coalesce(realizado,'0')::numeric,
               $2, $1
          FROM dash_sesi.fin_shift_staging
         WHERE importacao_id = $1`,
       [importacaoId, params.arquivo],
     );
+
+    if ((promovidas.rowCount ?? 0) !== params.linhas.length) {
+      throw new Error(
+        `Promoção incompleta: ${promovidas.rowCount ?? 0} de ${params.linhas.length} linhas gravadas. Nada foi alterado.`,
+      );
+    }
+
 
     await client.query(`DELETE FROM dash_sesi.fin_shift_staging WHERE importacao_id = $1`, [
       importacaoId,
