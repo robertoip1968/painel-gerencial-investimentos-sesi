@@ -1,7 +1,7 @@
 import type { Dataset } from "@/lib/csv-import";
 import type { Filtros } from "@/lib/facts";
 import { TODOS } from "@/lib/facts";
-import { ANO, MESES, forecastAno, mesBase, ritmos } from "@/lib/real-data";
+import { ANO, MESES, forecastAno, mesBase, mesFechadoConfig, mesParcial, realizadoFechado, ritmos } from "@/lib/real-data";
 
 const n2 = (v: number) => (v / 1_000_000).toFixed(2);
 const pc = (v: number, b: number) => (b > 0 ? ((v / b) * 100).toFixed(1) : "0,0");
@@ -13,6 +13,14 @@ export function contextoDoPainel(
   receita: { previsto: number; realizado: number; linhas: number },
 ) {
   const mb = mesBase(d);
+  const parcial = mesParcial();
+  const temConfig = mesFechadoConfig() >= 1;
+  const futuros = parcial > 0 && parcial < 12 ? `${MESES[parcial]}–${MESES[11]}` : "nenhum";
+  const linhaTemporal = temConfig
+    ? `CALENDÁRIO OFICIAL: último mês fechado: ${MESES[mb - 1]} (${mb}); mês atual/parcial: ${
+        parcial > 0 ? MESES[parcial - 1] : "nenhum"
+      }; meses futuros: ${futuros}. Meses parciais e futuros NÃO são meses encerrados e não indicam falha de execução.`
+    : `CALENDÁRIO: último mês com execução registrada: ${MESES[mb - 1]} (${mb}).`;
   const { media, necessario, restantes } = ritmos(d);
   const fc = forecastAno(d);
   const saldo = d.previsto - d.realizado;
@@ -46,7 +54,8 @@ export function contextoDoPainel(
     `conta contábil: ${filtros.conta === TODOS ? "todos" : filtros.conta}`,
   ].join(" | ");
 
-  return `BASE: ${d.fileName} — exercício ${ANO} (valores em reais; aqui resumidos em R$ milhões).
+  return `BASE: ${d.fileName} — exercício ${ANO()} (valores em reais; aqui resumidos em R$ milhões).
+${linhaTemporal}
 FILTROS ATIVOS: ${f}
 LANÇAMENTOS NO RECORTE: ${d.linhas.toLocaleString("pt-BR")}
 
@@ -58,9 +67,10 @@ DESPESA (recorte atual)
 - Meses encerrados considerados: ${MESES[0]}–${MESES[mb - 1]} (1 a ${mb}); meses ${mb + 1} a 12 ainda não executados
 - Último mês com execução: ${MESES[mb - 1]} (mês ${mb}); meta linear do período: ${meta.toFixed(1)}%
 
-- Ritmo médio realizado: R$ ${n2(media)} mi/mês
+- Realizado nos meses FECHADOS (${MESES[0]}–${MESES[mb - 1]}): R$ ${n2(realizadoFechado(d))} mi
+- Ritmo médio realizado (somente meses fechados): R$ ${n2(media)} mi/mês
 - Ritmo necessário para executar 100%: R$ ${n2(necessario)} mi/mês em ${restantes} meses
-- Forecast de encerramento (ritmo atual x 12): R$ ${n2(fc)} mi (${pc(fc, d.previsto)}% do previsto)
+- Forecast de encerramento (ritmo dos meses fechados x 12): R$ ${n2(fc)} mi (${pc(fc, d.previsto)}% do previsto)
 - Desvio projetado no fim do ano (forecast - previsto): R$ ${n2(fc - d.previsto)} mi
 
 RECEITA (mesmo recorte)
