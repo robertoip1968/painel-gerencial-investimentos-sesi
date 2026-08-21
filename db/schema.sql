@@ -140,7 +140,7 @@ SELECT
   CASE WHEN sum(previsto) <> 0
        THEN round(100 * sum(realizado) / sum(previsto), 2)
        ELSE 0 END                       AS execucao_pct,
-  max(mes) FILTER (WHERE realizado <> 0) AS mes_base
+  max(mes) FILTER (WHERE realizado <> 0) AS ultimo_mes_com_realizado
 FROM dash_sesi.lancamentos
 GROUP BY ano, origem;
 
