@@ -37,7 +37,9 @@ export const Route = createFileRoute("/api/auth/login")({
           });
         }
 
-        if (!process.env["PAINEL_ADMIN_USER"] || !process.env["PAINEL_ADMIN_PASSWORD"]) {
+        const credsConfiguradas =
+          !!process.env["PAINEL_ADMIN_USER"] && !!process.env["PAINEL_ADMIN_PASSWORD"];
+        if (!credsConfiguradas && process.env["NODE_ENV"] === "production") {
           return new Response(
             JSON.stringify({
               error:
@@ -46,6 +48,7 @@ export const Route = createFileRoute("/api/auth/login")({
             { status: 503, headers: json },
           );
         }
+
 
         if (!validarCredenciais(parsed.data.usuario.trim(), parsed.data.senha)) {
           return new Response(JSON.stringify({ error: "Usuário ou senha inválidos." }), {
