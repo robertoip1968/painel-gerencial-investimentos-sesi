@@ -18,6 +18,7 @@ import {
   filtrosAtivos,
 } from "@/lib/facts";
 import { carregarFatos } from "@/lib/fatos.functions";
+import { aplicarConfigExercicio } from "@/lib/exercicio";
 
 export type RiscoFiltro = "ok" | "warn" | "crit" | "semexec" | null;
 
@@ -70,6 +71,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     setCarregando(true);
     try {
       const r = await carregarFatos();
+      if (r.config) aplicarConfigExercicio(r.config);
       setFonte(r.fonte);
       if (r.fonte === "db" && r.payload) {
         aplicarFatos(r.payload);
@@ -78,11 +80,19 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
         aplicarFatos(vazio());
         setErroDados(r.mensagem ?? "Não foi possível carregar os dados do PostgreSQL.");
       } else {
-        setErroDados(null);
+        // fonte "local" só existe em DEV/preview; em produção nunca há mock.
+        if (import.meta.env.DEV) setErroDados(null);
+        else {
+          aplicarFatos(vazio());
+          setErroDados(r.mensagem ?? "Não foi possível carregar os dados do PostgreSQL.");
+        }
       }
       setVersao((v) => v + 1);
     } catch {
       setFonte("indisponivel");
+      // Nunca manter dados antigos nem cair para mock quando a consulta falha.
+      aplicarFatos(vazio());
+      setVersao((v) => v + 1);
       setErroDados("Não foi possível carregar os dados do PostgreSQL.");
     } finally {
       setCarregando(false);

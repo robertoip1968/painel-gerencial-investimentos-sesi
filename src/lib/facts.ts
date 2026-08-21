@@ -1,6 +1,7 @@
 import fatos from "@/data/sesi2026-fatos.json";
 import type { Dataset } from "@/lib/csv-import";
 import type { SegRow } from "@/lib/dashboard-data";
+import { anoExercicio } from "@/lib/exercicio";
 
 type Bloco = {
   n: number;
@@ -24,8 +25,23 @@ export type FatosPayload = {
   receita: Bloco;
 };
 
-/** Fonte ativa dos fatos: JSON embarcado por padrão, substituído pelo Postgres quando disponível. */
-let base = fatos as unknown as FatosPayload;
+/**
+ * Fonte ativa dos fatos.
+ * DEV/preview: JSON de demonstração como estado inicial.
+ * PRODUÇÃO: nasce vazio — só o PostgreSQL popula o painel. Nunca há mock.
+ */
+let base: FatosPayload = import.meta.env.DEV
+  ? (fatos as unknown as FatosPayload)
+  : {
+      ano: anoExercicio(),
+      empresa: "02MT",
+      fileName: "Carregando dados oficiais…",
+      cc: [],
+      item: [],
+      conta: [],
+      despesa: { n: 0, mes: [], cc: [], item: [], conta: [], linhas: [], previsto: [], realizado: [] },
+      receita: { n: 0, mes: [], cc: [], item: [], conta: [], linhas: [], previsto: [], realizado: [] },
+    };
 
 export type Filtros = {
   mesIni: number;
@@ -53,7 +69,6 @@ export const opcoes = {
   conta: ordenar(base.conta),
 };
 
-export const FATOS_ANO = base.ano;
 export let FATOS_FILE = base.fileName;
 
 /** Troca a fonte de dados em memória (usado ao carregar os fatos do Postgres). */
@@ -79,7 +94,7 @@ const blocoVazio = (): Bloco => ({
 /** Payload sem dados — usado quando o Postgres está indisponível em produção. */
 export function vazio(): FatosPayload {
   return {
-    ano: FATOS_ANO,
+    ano: anoExercicio(),
     empresa: "02MT",
     fileName: "Sem dados",
     cc: [],

@@ -1,56 +1,40 @@
-import raw from "@/data/sesi2026.json";
 import type { Dataset } from "@/lib/csv-import";
-import type { SegRow } from "@/lib/dashboard-data";
-
-type Bloco = {
-  linhas: number;
-  previsto: number;
-  realizado: number;
-  mensal: { mes: number; previsto: number; realizado: number }[];
-  segCentroCusto: SegRow[];
-  segItem: SegRow[];
-  segConta: SegRow[];
-};
-
-const base = raw as unknown as {
-  fileName: string;
-  ano: number;
-  empresa: string;
-  despesa: Bloco;
-  receita: Bloco;
-};
+import { anoExercicio, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
 
 export const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
-/** Despesa (investimentos/custeio) — base do painel. */
-export const realDataset: Dataset = {
-  fileName: base.fileName,
-  linhas: base.despesa.linhas,
-  previsto: base.despesa.previsto,
-  realizado: base.despesa.realizado,
-  segCentroCusto: base.despesa.segCentroCusto,
-  segItem: base.despesa.segItem,
-  segConta: base.despesa.segConta,
-  mensal: base.despesa.mensal,
-};
-
-
-export const receita = base.receita;
-export const ANO = base.ano;
+/** Exercício analisado (PAINEL_ANO_PADRAO, aplicado pelo backend). */
+export const ANO = () => anoExercicio();
+export { mesFechadoConfig, mesParcial };
 
 export const mi = (n: number) =>
   `R$ ${(n / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mi`;
 export const pctFmt = (n: number, base_: number) =>
   `${base_ > 0 ? ((n / base_) * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0,00"}%`;
 
-/** Último mês com execução registrada (1-12). */
-export function mesBase(d: Dataset) {
-  const m = d.mensal ?? [];
+/**
+ * Último mês ENCERRADO (1-12).
+ * Quando PAINEL_MES_FECHADO está configurado, ele manda: o mês parcial e os
+ * meses futuros nunca entram como encerrados. Sem configuração (DEV), cai na
+ * detecção pelo último mês com execução registrada.
+ */
+export function mesBase(_d?: Dataset) {
+  const cfg = mesFechadoConfig();
+  if (cfg >= 1 && cfg <= 12) return cfg;
+  const m = _d?.mensal ?? [];
   let last = 0;
   m.forEach((x) => {
     if (x.realizado > 0) last = x.mes;
   });
   return last || 6;
+}
+
+/** Realizado acumulado somente nos meses ENCERRADOS. */
+export function realizadoFechado(d: Dataset) {
+  const mb = mesBase(d);
+  const m = d.mensal ?? [];
+  if (!m.length) return d.realizado;
+  return m.slice(0, mb).reduce((a, x) => a + x.realizado, 0);
 }
 
 /** Série acumulada em milhões, com forecast pelo ritmo médio realizado. */
@@ -83,7 +67,8 @@ export function serieAcumulada(d: Dataset) {
 
 export function ritmos(d: Dataset) {
   const base_ = mesBase(d);
-  const media = d.realizado / base_;
+  // Ritmo calculado SOMENTE com os meses fechados (mês parcial fica de fora).
+  const media = realizadoFechado(d) / base_;
   const restantes = Math.max(1, 12 - base_);
   const necessario = (d.previsto - d.realizado) / restantes;
   return { base: base_, media, necessario, restantes };
@@ -207,7 +192,7 @@ export function respostasFrom(d: Dataset) {
   const criticoValor = criticos.reduce((a, c) => a + c.previsto, 0);
   const periodo = `${MESES[0]}-${MESES[mb - 1]}`;
   return [
-    { pergunta: "Quanto temos previsto?", resposta: mi(d.previsto), detalhe: `Orçamento ${ANO} • ${d.linhas.toLocaleString("pt-BR")} lançamentos`, tone: "brand" as const },
+    { pergunta: "Quanto temos previsto?", resposta: mi(d.previsto), detalhe: `Orçamento ${ANO()} • ${d.linhas.toLocaleString("pt-BR")} lançamentos`, tone: "brand" as const },
     { pergunta: "Quanto já realizamos?", resposta: mi(d.realizado), detalhe: `${pctFmt(d.realizado, d.previsto)} do previsto (${periodo})`, tone: "ok" as const },
     { pergunta: "Quanto falta executar?", resposta: mi(saldo), detalhe: `${pctFmt(saldo, d.previsto)} em ${12 - mb} meses restantes`, tone: "warn" as const },
     {

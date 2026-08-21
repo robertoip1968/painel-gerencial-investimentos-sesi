@@ -41,6 +41,20 @@ CREATE INDEX IF NOT EXISTS ix_lanc_cc         ON dash_sesi.lancamentos (nome_cen
 CREATE INDEX IF NOT EXISTS ix_lanc_item       ON dash_sesi.lancamentos (nome_item_contabil);
 CREATE INDEX IF NOT EXISTS ix_lanc_conta      ON dash_sesi.lancamentos (nome_conta_contabil);
 
+-- Proteção do grão oficial: uma linha por
+-- origem + empresa + ano + mês + centro de custo + item + conta.
+-- coalesce garante unicidade mesmo quando o código vem vazio/nulo.
+CREATE UNIQUE INDEX IF NOT EXISTS ux_lanc_grao ON dash_sesi.lancamentos (
+  origem,
+  cod_empresa,
+  ano,
+  mes,
+  coalesce(cod_centro_custo, ''),
+  coalesce(cod_item_contabil, ''),
+  coalesce(cod_conta_contabil, '')
+);
+
+
 -- -------------------------------------------------------------
 -- Log de importações
 -- -------------------------------------------------------------
@@ -89,19 +103,29 @@ CREATE INDEX IF NOT EXISTS ix_stg_importacao ON dash_sesi.fin_shift_staging (imp
 -- -------------------------------------------------------------
 -- Visão agregada consumida pelo painel (uma linha por combinação)
 -- -------------------------------------------------------------
-CREATE OR REPLACE VIEW dash_sesi.vw_fatos AS
+-- A view preserva códigos E nomes: registros com códigos diferentes nunca são
+-- agrupados apenas por terem o mesmo nome. (DROP + CREATE porque a lista de
+-- colunas mudou; CREATE OR REPLACE não permite acrescentar colunas.)
+DROP VIEW IF EXISTS dash_sesi.vw_fatos;
+CREATE VIEW dash_sesi.vw_fatos AS
 SELECT
   ano,
   origem            AS tipo,
   mes,
+  cod_centro_custo,
   nome_centro_custo   AS centro_custo,
+  cod_item_contabil,
   nome_item_contabil  AS item_contabil,
+  cod_conta_contabil,
   nome_conta_contabil AS conta_contabil,
   count(*)::int     AS linhas,
   sum(previsto)     AS previsto,
   sum(realizado)    AS realizado
 FROM dash_sesi.lancamentos
-GROUP BY ano, origem, mes, nome_centro_custo, nome_item_contabil, nome_conta_contabil;
+GROUP BY ano, origem, mes,
+         cod_centro_custo, nome_centro_custo,
+         cod_item_contabil, nome_item_contabil,
+         cod_conta_contabil, nome_conta_contabil;
 
 COMMENT ON VIEW dash_sesi.vw_fatos IS 'Fatos agregados usados por KPIs, gráficos, filtros e tabelas do painel.';
 

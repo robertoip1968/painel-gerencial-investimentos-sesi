@@ -4,8 +4,11 @@ import type { LinhaNormalizada } from "@/lib/import-normalize";
 export type LinhaFato = {
   tipo: "DESPESA" | "RECEITA";
   mes: number;
+  cod_centro_custo: string | null;
   centro_custo: string;
+  cod_item_contabil: string | null;
   item_contabil: string;
+  cod_conta_contabil: string | null;
   conta_contabil: string;
   linhas: number;
   previsto: number;
@@ -31,6 +34,18 @@ export function getPool(): Pool | null {
   return pool;
 }
 
+/** Exercício oficial (PAINEL_ANO_PADRAO) lido apenas no servidor. */
+export function anoPadraoConfigurado(): number {
+  const v = Number(process.env["PAINEL_ANO_PADRAO"]);
+  return Number.isFinite(v) && v >= 2000 && v <= 2100 ? Math.trunc(v) : new Date().getFullYear();
+}
+
+/** Último mês encerrado (PAINEL_MES_FECHADO). 0 = não configurado. */
+export function mesFechadoConfigurado(): number {
+  const v = Number(process.env["PAINEL_MES_FECHADO"]);
+  return Number.isFinite(v) && v >= 1 && v <= 12 ? Math.trunc(v) : 0;
+}
+
 export function bancoConfigurado() {
   return Boolean(process.env["DATABASE_URL"]);
 }
@@ -48,7 +63,10 @@ export async function pingBanco(): Promise<boolean> {
 }
 
 const SQL_FATOS = `
-  SELECT tipo, mes, centro_custo, item_contabil, conta_contabil,
+  SELECT tipo, mes,
+         cod_centro_custo, centro_custo,
+         cod_item_contabil, item_contabil,
+         cod_conta_contabil, conta_contabil,
          linhas::int AS linhas,
          previsto::float8 AS previsto,
          realizado::float8 AS realizado
@@ -88,14 +106,38 @@ type BlocoDb = {
 
 /** Converte as linhas da view no payload comprimido consumido pelo painel. */
 export function montarPayload(ano: number, rows: LinhaFato[]): FatosPayloadDb {
+  // Dicionários indexados pelo GRÃO (código + nome). Códigos diferentes nunca
+  // são fundidos só porque o nome é igual; nomes repetidos ganham o código no rótulo.
   const cc: string[] = [];
   const item: string[] = [];
   const conta: string[] = [];
-  const idx = (list: string[], v: string) => {
-    const i = list.indexOf(v);
-    if (i >= 0) return i;
-    list.push(v);
-    return list.length - 1;
+  const chaves: Record<"cc" | "item" | "conta", Map<string, number>> = {
+    cc: new Map(),
+    item: new Map(),
+    conta: new Map(),
+  };
+  const nomes: Record<"cc" | "item" | "conta", Map<string, number>> = {
+    cc: new Map(),
+    item: new Map(),
+    conta: new Map(),
+  };
+  const idx = (
+    dim: "cc" | "item" | "conta",
+    list: string[],
+    cod: string | null | undefined,
+    nome: string,
+  ) => {
+    const codigo = (cod ?? "").trim();
+    const chave = `${codigo}\u0000${nome}`;
+    const achado = chaves[dim].get(chave);
+    if (achado !== undefined) return achado;
+    const jaExiste = nomes[dim].get(nome);
+    const rotulo = jaExiste !== undefined && codigo ? `${nome} (${codigo})` : nome;
+    list.push(rotulo);
+    const i = list.length - 1;
+    chaves[dim].set(chave, i);
+    if (jaExiste === undefined) nomes[dim].set(nome, i);
+    return i;
   };
   const bloco = (): BlocoDb => ({
     n: 0,
@@ -113,9 +155,9 @@ export function montarPayload(ano: number, rows: LinhaFato[]): FatosPayloadDb {
   for (const r of rows) {
     const b = r.tipo === "RECEITA" ? receita : despesa;
     b.mes.push(r.mes);
-    b.cc.push(idx(cc, r.centro_custo));
-    b.item.push(idx(item, r.item_contabil));
-    b.conta.push(idx(conta, r.conta_contabil));
+    b.cc.push(idx("cc", cc, r.cod_centro_custo, r.centro_custo));
+    b.item.push(idx("item", item, r.cod_item_contabil, r.item_contabil));
+    b.conta.push(idx("conta", conta, r.cod_conta_contabil, r.conta_contabil));
     b.linhas.push(r.linhas);
     b.previsto.push(Number(r.previsto));
     b.realizado.push(Number(r.realizado));
@@ -186,6 +228,7 @@ export async function importarLancamentos(params: {
   const anos = [...new Set(params.linhas.map((l) => l.ano))].sort();
   let client: PoolClient | null = null;
   let importacaoId: number | null = null;
+  let detalhesErro: string[] | null = null;
 
   try {
     client = await p.connect();
@@ -259,6 +302,36 @@ export async function importarLancamentos(params: {
       );
     }
 
+    // Duplicidade no grão oficial: origem + empresa + ano + mês + CC + item + conta.
+    const duplicadas = await client.query(
+      `SELECT origem, cod_empresa, ano, mes,
+              coalesce(cod_centro_custo,'')   AS cod_centro_custo,
+              coalesce(cod_item_contabil,'')  AS cod_item_contabil,
+              coalesce(cod_conta_contabil,'') AS cod_conta_contabil,
+              count(*)::int AS quantidade
+         FROM dash_sesi.fin_shift_staging
+        WHERE importacao_id = $1
+        GROUP BY origem, cod_empresa, ano, mes,
+                 coalesce(cod_centro_custo,''),
+                 coalesce(cod_item_contabil,''),
+                 coalesce(cod_conta_contabil,'')
+       HAVING count(*) > 1
+        ORDER BY count(*) DESC
+        LIMIT 20`,
+      [importacaoId],
+    );
+    if (duplicadas.rowCount && duplicadas.rowCount > 0) {
+      detalhesErro = duplicadas.rows.map(
+        (d: Record<string, unknown>) =>
+          `${d["origem"]} | empresa ${d["cod_empresa"]} | ${d["ano"]}/${String(d["mes"]).padStart(2, "0")} | CC ${d["cod_centro_custo"] || "—"} | item ${d["cod_item_contabil"] || "—"} | conta ${d["cod_conta_contabil"] || "—"} → ${d["quantidade"]} ocorrências`,
+      );
+      throw new Error(
+        "Importação cancelada. Foram encontradas chaves duplicadas na base (grão oficial: origem + empresa + ano + mês + centro de custo + item + conta). Nenhuma alteração foi aplicada.",
+      );
+    }
+
+
+
     // substitui integralmente os exercícios presentes no arquivo
     await client.query(`DELETE FROM dash_sesi.lancamentos WHERE ano = ANY($1::smallint[])`, [anos]);
 
@@ -322,7 +395,12 @@ export async function importarLancamentos(params: {
       }
     }
     console.error("Importação falhou:", msg);
-    return { ...base, importacaoId, erro: msg };
+    return {
+      ...base,
+      importacaoId,
+      erro: msg,
+      ...(detalhesErro ? { detalhes: detalhesErro } : {}),
+    };
   } finally {
     client?.release();
   }
