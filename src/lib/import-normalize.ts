@@ -93,6 +93,35 @@ export function parseNumber(v: string | number | null | undefined): number {
   return neg ? -n : n;
 }
 
+/**
+ * Conversão ESTRITA usada na importação oficial.
+ * Devolve null quando o conteúdo não é inequivocamente numérico ("ABC", "12X34").
+ * Campo vazio devolve 0 apenas quando `vazioComoZero` for true.
+ */
+export function parseNumeroEstrito(
+  v: string | number | null | undefined,
+  vazioComoZero = true,
+): number | null {
+  if (typeof v === "number") return isFinite(v) ? v : null;
+  const bruto = String(v ?? "").trim();
+  if (bruto === "") return vazioComoZero ? 0 : null;
+
+  let s = bruto.replace(/[R$\s\u00a0]/g, "");
+  const neg = /^\(.*\)$/.test(s) || s.startsWith("-");
+  s = s.replace(/[()]/g, "").replace(/^[-+]/, "");
+  // Só dígitos, pontos e vírgulas são aceitos.
+  if (!/^[0-9]+([.,][0-9]+)*$/.test(s)) return null;
+
+  const lastComma = s.lastIndexOf(",");
+  const lastDot = s.lastIndexOf(".");
+  if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+  else if (lastDot > lastComma) s = s.replace(/,/g, "");
+  else s = s.replace(/[.,]/g, "");
+  const n = Number(s);
+  if (!isFinite(n)) return null;
+  return neg ? -n : n;
+}
+
 const MESES_NOME = [
   "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez",
 ];
@@ -266,6 +295,26 @@ export function normalizarMatriz(
       return;
     }
 
+    // Validação numérica rigorosa: texto inválido é erro, nunca vira 0.
+    const brutoPrevisto = get(c, map.previsto);
+    const brutoRealizado = get(c, map.realizado);
+    const previsto = parseNumeroEstrito(brutoPrevisto);
+    if (previsto === null) {
+      rejeitadas.push({
+        linha: numeroLinha,
+        motivo: `coluna previsto — valor inválido: "${brutoPrevisto}"`,
+      });
+      return;
+    }
+    const realizado = parseNumeroEstrito(brutoRealizado);
+    if (realizado === null) {
+      rejeitadas.push({
+        linha: numeroLinha,
+        motivo: `coluna realizado — valor inválido: "${brutoRealizado}"`,
+      });
+      return;
+    }
+
     const codItem = get(c, map.codItem);
     const codConta = get(c, map.codConta);
 
@@ -280,8 +329,8 @@ export function normalizarMatriz(
       item: get(c, map.item) || codItem || "Não informado",
       codConta,
       conta: get(c, map.conta) || codConta || "Não informado",
-      previsto: parseNumber(get(c, map.previsto)),
-      realizado: parseNumber(get(c, map.realizado)),
+      previsto,
+      realizado,
     });
   });
 
