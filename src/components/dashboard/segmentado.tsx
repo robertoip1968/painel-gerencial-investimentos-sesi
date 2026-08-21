@@ -234,7 +234,7 @@ export function VisaoSegmentada() {
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="py-2 font-medium">{ativa.colLabel}</th>
                 <th className="py-2 text-right font-medium">Previsto</th>
-                <th className="py-2 text-right font-medium">Comprometido</th>
+
                 <th className="py-2 text-right font-medium">Realizado</th>
                 <th className="py-2 text-right font-medium">% Exec.</th>
                 <th className="py-2 text-right font-medium">Desvio (p.p.)</th>
