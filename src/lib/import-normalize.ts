@@ -7,23 +7,39 @@
 export type CampoPlanilha =
   | "ano"
   | "mes"
-  | "tipo"
-  | "empresa"
+  | "origem"
+  | "codEmpresa"
+  | "codCentroCusto"
   | "centroCusto"
+  | "codItem"
   | "item"
+  | "codConta"
   | "conta"
   | "grupoCC"
   | "previsto"
-  | "comprometido"
   | "realizado";
 
 export const ALIASES: Record<CampoPlanilha, string[]> = {
   ano: ["ano", "exercicio", "exercício", "ano exercicio", "competencia ano"],
   mes: ["mes", "mês", "competencia", "competência", "periodo", "período"],
-  tipo: ["tipo", "natureza lancamento", "tipo lancamento", "tipo de lancamento"],
-  empresa: ["empresa", "entidade", "regional"],
-  centroCusto: ["centro de custo", "centrocusto", "centro_custo", "cc", "unidade", "centro"],
+  // "origem" é o nome oficial da planilha SHIFT (RECEITA / DESPESA)
+  origem: ["origem", "tipo", "natureza lancamento", "tipo lancamento", "tipo de lancamento"],
+  codEmpresa: ["cod_empresa", "cod empresa", "codempresa", "empresa", "entidade", "regional"],
+  codCentroCusto: ["cod_centro_custo", "cod centro custo", "codcentrocusto", "cod cc"],
+  centroCusto: [
+    "nome_centro_custo",
+    "nome centro custo",
+    "centro de custo",
+    "centrocusto",
+    "centro_custo",
+    "cc",
+    "unidade",
+    "centro",
+  ],
+  codItem: ["cod_item_contabil", "cod item contabil", "coditemcontabil", "cod item"],
   item: [
+    "nome_item_contabil",
+    "nome item contabil",
     "item",
     "item de investimento",
     "iteminvestimento",
@@ -35,12 +51,22 @@ export const ALIASES: Record<CampoPlanilha, string[]> = {
     "projeto",
     "investimento",
   ],
-  conta: ["conta contabil", "conta contábil", "conta_contabil", "contacontabil", "conta", "natureza"],
-  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento", "origem"],
+  codConta: ["cod_conta_contabil", "cod conta contabil", "codcontacontabil", "cod conta"],
+  conta: [
+    "nome_conta_contabil",
+    "nome conta contabil",
+    "conta contabil",
+    "conta contábil",
+    "conta_contabil",
+    "contacontabil",
+    "conta",
+    "natureza",
+  ],
+  grupoCC: ["grupo", "area", "área", "gerencia", "gerência", "segmento"],
   previsto: ["previsto", "orcado", "orçado", "orcamento", "orçamento", "valor previsto", "budget"],
-  comprometido: ["comprometido", "empenhado", "compromissado", "valor comprometido"],
   realizado: ["realizado", "executado", "pago", "valor realizado", "despesa"],
 };
+
 
 export const norm = (s: string) =>
   String(s ?? "")
