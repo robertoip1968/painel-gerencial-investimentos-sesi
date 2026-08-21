@@ -173,15 +173,17 @@ export function csvParaMatriz(text: string): string[][] {
 // ------------- Normalização para persistência -------------
 
 export type LinhaNormalizada = {
+  origem: "DESPESA" | "RECEITA";
+  codEmpresa: string;
   ano: number;
   mes: number;
-  tipo: "DESPESA" | "RECEITA";
-  empresa: string;
+  codCentroCusto: string;
   centroCusto: string;
+  codItem: string;
   item: string;
+  codConta: string;
   conta: string;
   previsto: number;
-  comprometido: number;
   realizado: number;
 };
 
@@ -194,9 +196,19 @@ export type ResultadoNormalizacao = {
   colunasReconhecidas: CampoPlanilha[];
 };
 
+/** Origem só é aceita quando vier explícita na planilha (RECEITA ou DESPESA). */
+export function parseOrigem(v: string): "DESPESA" | "RECEITA" | null {
+  const s = norm(v);
+  if (!s) return null;
+  if (s.startsWith("rec")) return "RECEITA";
+  if (s.startsWith("desp")) return "DESPESA";
+  return null;
+}
+
 /**
  * Converte a matriz (cabeçalho + linhas) em lançamentos prontos para o banco.
- * Não inventa dados: linhas sem mês ou sem centro de custo são rejeitadas.
+ * Não inventa dados: origem, mês, ano e centro de custo precisam existir na
+ * planilha — nada é assumido por padrão.
  */
 export function normalizarMatriz(
   matriz: (string | number | null | undefined)[][],
@@ -206,14 +218,15 @@ export function normalizarMatriz(
   if (!cabecalho) throw new Error("Planilha sem cabeçalho.");
   const map = mapColumns(cabecalho.map((c) => String(c ?? "")));
 
-  if (map.previsto === undefined && map.realizado === undefined) {
+  const faltando: string[] = [];
+  if (map.origem === undefined) faltando.push("Origem (RECEITA/DESPESA)");
+  if (map.previsto === undefined && map.realizado === undefined)
+    faltando.push("Previsto e/ou Realizado");
+  if (map.centroCusto === undefined && map.codCentroCusto === undefined)
+    faltando.push("Centro de Custo");
+  if (faltando.length) {
     throw new Error(
-      `Não encontrei colunas de valores. Colunas lidas: ${cabecalho.join(", ")}. Esperado algo como "Previsto", "Comprometido", "Realizado".`,
-    );
-  }
-  if (map.centroCusto === undefined) {
-    throw new Error(
-      `Não encontrei a coluna de Centro de Custo. Colunas lidas: ${cabecalho.join(", ")}.`,
+      `Colunas obrigatórias ausentes: ${faltando.join("; ")}. Colunas lidas: ${cabecalho.join(", ")}.`,
     );
   }
 
@@ -227,7 +240,14 @@ export function normalizarMatriz(
     const numeroLinha = i + 2; // 1 = cabeçalho
     if (c.every((v) => String(v ?? "").trim() === "")) return;
 
-    const centroCusto = get(c, map.centroCusto);
+    const origem = parseOrigem(get(c, map.origem));
+    if (!origem) {
+      rejeitadas.push({ linha: numeroLinha, motivo: "Origem ausente ou fora de RECEITA/DESPESA" });
+      return;
+    }
+
+    const codCentroCusto = get(c, map.codCentroCusto);
+    const centroCusto = get(c, map.centroCusto) || codCentroCusto;
     if (!centroCusto) {
       rejeitadas.push({ linha: numeroLinha, motivo: "Centro de custo ausente" });
       return;
@@ -246,19 +266,21 @@ export function normalizarMatriz(
       return;
     }
 
-    const tipoBruto = norm(get(c, map.tipo));
-    const tipo: "DESPESA" | "RECEITA" = tipoBruto.startsWith("rec") ? "RECEITA" : "DESPESA";
+    const codItem = get(c, map.codItem);
+    const codConta = get(c, map.codConta);
 
     linhas.push({
+      origem,
+      codEmpresa: get(c, map.codEmpresa) || "02MT",
       ano,
       mes,
-      tipo,
-      empresa: get(c, map.empresa) || "02MT",
+      codCentroCusto,
       centroCusto,
-      item: get(c, map.item) || "Não informado",
-      conta: get(c, map.conta) || "Não informado",
+      codItem,
+      item: get(c, map.item) || codItem || "Não informado",
+      codConta,
+      conta: get(c, map.conta) || codConta || "Não informado",
       previsto: parseNumber(get(c, map.previsto)),
-      comprometido: parseNumber(get(c, map.comprometido)),
       realizado: parseNumber(get(c, map.realizado)),
     });
   });
@@ -270,3 +292,4 @@ export function normalizarMatriz(
     colunasReconhecidas: Object.keys(map) as CampoPlanilha[],
   };
 }
+
