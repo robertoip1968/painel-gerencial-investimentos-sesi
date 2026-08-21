@@ -41,6 +41,20 @@ CREATE INDEX IF NOT EXISTS ix_lanc_cc         ON dash_sesi.lancamentos (nome_cen
 CREATE INDEX IF NOT EXISTS ix_lanc_item       ON dash_sesi.lancamentos (nome_item_contabil);
 CREATE INDEX IF NOT EXISTS ix_lanc_conta      ON dash_sesi.lancamentos (nome_conta_contabil);
 
+-- Proteção do grão oficial: uma linha por
+-- origem + empresa + ano + mês + centro de custo + item + conta.
+-- coalesce garante unicidade mesmo quando o código vem vazio/nulo.
+CREATE UNIQUE INDEX IF NOT EXISTS ux_lanc_grao ON dash_sesi.lancamentos (
+  origem,
+  cod_empresa,
+  ano,
+  mes,
+  coalesce(cod_centro_custo, ''),
+  coalesce(cod_item_contabil, ''),
+  coalesce(cod_conta_contabil, '')
+);
+
+
 -- -------------------------------------------------------------
 -- Log de importações
 -- -------------------------------------------------------------
