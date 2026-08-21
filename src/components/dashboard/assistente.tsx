@@ -1,6 +1,4 @@
 import { useMemo, useState } from "react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 import { Bot, MessageSquare, X } from "lucide-react";
 import {
   Conversation,
@@ -25,26 +23,49 @@ const SUGESTOES = [
   "Quais centros de custo concentram o saldo a executar?",
 ];
 
+type Msg = { id: string; role: "user" | "assistant"; text: string };
+
 export function AssistenteVirtual() {
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState("");
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const { dataset, filtros, receita } = useDataset();
-
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
-  const { messages, sendMessage, status, error } = useChat({ transport });
 
   const contexto = useMemo(
     () => contextoDoPainel(dataset, filtros, receita),
     [dataset, filtros, receita],
   );
 
-  const carregando = status === "submitted" || status === "streaming";
-
-  const enviar = (t: string) => {
-    const v = t.trim();
-    if (!v || carregando) return;
+  const enviar = async (t: string) => {
+    const pergunta = t.trim();
+    if (!pergunta || carregando) return;
     setTexto("");
-    void sendMessage({ text: v }, { body: { contexto } });
+    setErro(null);
+    const historico = messages.map((m) => ({ role: m.role, text: m.text }));
+    setMessages((m) => [...m, { id: crypto.randomUUID(), role: "user", text: pergunta }]);
+    setCarregando(true);
+    try {
+      const resp = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta, contexto, filtros, historico }),
+      });
+      const data = (await resp.json()) as { resposta?: string; error?: string };
+      if (!resp.ok || !data.resposta) {
+        setErro(data.error ?? "Não foi possível responder agora.");
+      } else {
+        setMessages((m) => [
+          ...m,
+          { id: crypto.randomUUID(), role: "assistant", text: data.resposta! },
+        ]);
+      }
+    } catch {
+      setErro("Falha de conexão com o assistente.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   if (!aberto) {
@@ -83,7 +104,7 @@ export function AssistenteVirtual() {
                 {SUGESTOES.map((s) => (
                   <button
                     key={s}
-                    onClick={() => enviar(s)}
+                    onClick={() => void enviar(s)}
                     className="rounded-md border border-border px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted"
                   >
                     {s}
@@ -96,19 +117,13 @@ export function AssistenteVirtual() {
           {messages.map((m) => (
             <Message from={m.role} key={m.id}>
               <MessageContent>
-                {m.parts.map((p, i) =>
-                  p.type === "text" ? <MessageResponse key={i}>{p.text}</MessageResponse> : null,
-                )}
+                <MessageResponse>{m.text}</MessageResponse>
               </MessageContent>
             </Message>
           ))}
 
           {carregando && <Shimmer className="text-xs">Analisando os dados…</Shimmer>}
-          {error && (
-            <p className="text-xs text-crit">
-              Não foi possível responder agora. Tente novamente em instantes.
-            </p>
-          )}
+          {erro && <p className="text-xs text-crit">{erro}</p>}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
@@ -117,7 +132,7 @@ export function AssistenteVirtual() {
         <PromptInput
           onSubmit={(_, e) => {
             e.preventDefault();
-            enviar(texto);
+            void enviar(texto);
           }}
         >
           <PromptInputTextarea
@@ -126,7 +141,10 @@ export function AssistenteVirtual() {
             placeholder="Ex.: qual a tendência de encerramento do exercício?"
           />
           <PromptInputFooter className="justify-end">
-            <PromptInputSubmit status={status} disabled={!texto.trim() || carregando} />
+            <PromptInputSubmit
+              status={carregando ? "submitted" : "ready"}
+              disabled={!texto.trim() || carregando}
+            />
           </PromptInputFooter>
         </PromptInput>
       </div>
