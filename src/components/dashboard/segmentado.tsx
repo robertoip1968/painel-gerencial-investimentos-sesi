@@ -108,11 +108,11 @@ export function VisaoSegmentada() {
     (acc, r) => ({
       previsto: acc.previsto + r.previsto,
       realizado: acc.realizado + r.realizado,
-      comprometido: acc.comprometido + r.comprometido,
       saldo: acc.saldo + r.saldo,
     }),
-    { previsto: 0, realizado: 0, comprometido: 0, saldo: 0 },
+    { previsto: 0, realizado: 0, saldo: 0 },
   );
+
 
   const chartData = rows.slice(0, 8).map((r) => ({
     nome: r.nome.length > 26 ? `${r.nome.slice(0, 25)}…` : r.nome,
