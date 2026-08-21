@@ -5,7 +5,6 @@ import type { SegRow } from "@/lib/dashboard-data";
 type Bloco = {
   linhas: number;
   previsto: number;
-  comprometido: number;
   realizado: number;
   mensal: { mes: number; previsto: number; realizado: number }[];
   segCentroCusto: SegRow[];
@@ -28,13 +27,13 @@ export const realDataset: Dataset = {
   fileName: base.fileName,
   linhas: base.despesa.linhas,
   previsto: base.despesa.previsto,
-  comprometido: base.despesa.comprometido,
   realizado: base.despesa.realizado,
   segCentroCusto: base.despesa.segCentroCusto,
   segItem: base.despesa.segItem,
   segConta: base.despesa.segConta,
   mensal: base.despesa.mensal,
 };
+
 
 export const receita = base.receita;
 export const ANO = base.ano;

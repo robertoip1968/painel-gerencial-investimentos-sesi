@@ -118,7 +118,7 @@ function build(b: Bloco, f: Filtros, fileName: string): Dataset {
   let realizado = 0;
 
   const add = (map: Map<string, SegRow>, nome: string, grupo: string, p: number, r: number) => {
-    const cur = map.get(nome) ?? { nome, grupo, previsto: 0, comprometido: 0, realizado: 0 };
+    const cur = map.get(nome) ?? { nome, grupo, previsto: 0, realizado: 0 };
     cur.previsto += p;
     cur.realizado += r;
     map.set(nome, cur);
@@ -153,7 +153,7 @@ function build(b: Bloco, f: Filtros, fileName: string): Dataset {
     fileName,
     linhas,
     previsto,
-    comprometido: 0,
+    
     realizado,
     mensal,
     segCentroCusto: arr(mapCC),
