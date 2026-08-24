@@ -65,15 +65,26 @@ export function sessaoDaRequisicao(request: Request): SessaoServidor | null {
   return lerToken(lerCookieHeader(request, COOKIE));
 }
 
+/**
+ * Em HTTPS usamos SameSite=None; Secure para o cookie também funcionar quando o
+ * painel é aberto dentro de um iframe (preview do Lovable). Em HTTP (intranet
+ * on-premise) mantemos SameSite=Lax, pois None exige Secure.
+ */
+function atributosDeSite(seguro: boolean) {
+  return seguro ? "SameSite=None; Secure" : "SameSite=Lax";
+}
+
 export function cookieDeSessao(token: string, seguro: boolean) {
-  return `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}${seguro ? "; Secure" : ""}`;
+  return `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; ${atributosDeSite(seguro)}; Max-Age=${MAX_AGE}`;
 }
 
 export function cookieDeLogout(seguro: boolean) {
-  return `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${seguro ? "; Secure" : ""}`;
+  return `${COOKIE}=; Path=/; HttpOnly; ${atributosDeSite(seguro)}; Max-Age=0`;
 }
 
 export function usarSecure(request: Request) {
+  const proto = request.headers.get("x-forwarded-proto");
+  if (proto) return proto.split(",")[0]!.trim() === "https";
   return new URL(request.url).protocol === "https:";
 }
 
