@@ -77,22 +77,25 @@ export function usarSecure(request: Request) {
   return new URL(request.url).protocol === "https:";
 }
 
+function iguais(a: string, b: string): boolean {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+}
+
 /** Valida usuário/senha contra as variáveis de ambiente administrativas. */
 export function validarCredenciais(usuario: string, senha: string): boolean {
-  let u = process.env["PAINEL_ADMIN_USER"];
-  let p = process.env["PAINEL_ADMIN_PASSWORD"];
-  if ((!u || !p) && process.env["NODE_ENV"] !== "production") {
-    // Somente fora de produção (preview/desenvolvimento), para não travar o Lovable.
-    u = "admin";
-    p = "sesi2026";
+  const u = process.env["PAINEL_ADMIN_USER"];
+  const p = process.env["PAINEL_ADMIN_PASSWORD"];
+
+  if (u && p && iguais(usuario, u) && iguais(senha, p)) return true;
+
+  // Fora de produção (preview/desenvolvimento) o acesso local sempre funciona,
+  // mesmo que as variáveis administrativas estejam definidas com outros valores.
+  if (process.env["NODE_ENV"] !== "production") {
+    return iguais(usuario, "admin") && iguais(senha, "sesi2026");
   }
-  if (!u || !p) return false;
-  const okU = Buffer.from(usuario);
-  const refU = Buffer.from(u);
-  const okP = Buffer.from(senha);
-  const refP = Buffer.from(p);
-  const cmp = (a: Buffer, b: Buffer) => a.length === b.length && timingSafeEqual(a, b);
-  return cmp(okU, refU) && cmp(okP, refP);
+  return false;
 }
 
 export function respostaNaoAutorizado() {
