@@ -5,10 +5,10 @@ const MAX_AGE = 60 * 60 * 8; // 8 horas
 
 export type SessaoServidor = { usuario: string; exp: number };
 
-function segredo(): string {
+function segredo(permitirSegredoDeDesenvolvimento = false): string {
   const s = process.env["PAINEL_SESSION_SECRET"];
   if (s && s.length >= 16) return s;
-  if (process.env["NODE_ENV"] === "production") {
+  if (process.env["NODE_ENV"] === "production" && !permitirSegredoDeDesenvolvimento) {
     throw new Error("PAINEL_SESSION_SECRET não configurado.");
   }
   // Somente em desenvolvimento: segredo efêmero.
@@ -24,22 +24,22 @@ declare global {
 const b64 = (s: string) => Buffer.from(s, "utf8").toString("base64url");
 const unb64 = (s: string) => Buffer.from(s, "base64url").toString("utf8");
 
-function assinar(payload: string) {
-  return createHmac("sha256", segredo()).update(payload).digest("base64url");
+function assinar(payload: string, permitirSegredoDeDesenvolvimento = false) {
+  return createHmac("sha256", segredo(permitirSegredoDeDesenvolvimento)).update(payload).digest("base64url");
 }
 
-export function criarToken(usuario: string): string {
+export function criarToken(usuario: string, permitirDesenvolvimento = false): string {
   const dados: SessaoServidor = { usuario, exp: Math.floor(Date.now() / 1000) + MAX_AGE };
   const payload = b64(JSON.stringify(dados));
-  return `${payload}.${assinar(payload)}`;
+  return `${payload}.${assinar(payload, permitirDesenvolvimento)}`;
 }
 
-export function lerToken(token: string | undefined | null): SessaoServidor | null {
+export function lerToken(token: string | undefined | null, permitirDesenvolvimento = false): SessaoServidor | null {
   if (!token || !token.includes(".")) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
   try {
-    const esperado = Buffer.from(assinar(payload));
+    const esperado = Buffer.from(assinar(payload, permitirDesenvolvimento));
     const recebido = Buffer.from(sig);
     if (esperado.length !== recebido.length || !timingSafeEqual(esperado, recebido)) return null;
     const dados = JSON.parse(unb64(payload)) as SessaoServidor;
@@ -62,7 +62,14 @@ function lerCookieHeader(request: Request, nome: string): string | null {
 
 /** Sessão válida da requisição, ou null. */
 export function sessaoDaRequisicao(request: Request): SessaoServidor | null {
-  return lerToken(lerCookieHeader(request, COOKIE));
+  return lerToken(lerCookieHeader(request, COOKIE), requisicaoEhDesenvolvimento(request));
+}
+
+/** Libera as credenciais locais somente no localhost e no domínio isolado de preview. */
+export function requisicaoEhDesenvolvimento(request: Request): boolean {
+  const encaminhado = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = encaminhado || new URL(request.url).hostname;
+  return host === "localhost" || host === "127.0.0.1" || host.includes("-preview--");
 }
 
 /**
@@ -84,7 +91,7 @@ export function cookieDeLogout(seguro: boolean) {
 
 export function usarSecure(request: Request) {
   const proto = request.headers.get("x-forwarded-proto");
-  if (proto) return proto.split(",")[0]!.trim() === "https";
+  if (proto) return proto.split(",")[0]?.trim() === "https";
   return new URL(request.url).protocol === "https:";
 }
 
@@ -95,7 +102,7 @@ function iguais(a: string, b: string): boolean {
 }
 
 /** Valida usuário/senha contra as variáveis de ambiente administrativas. */
-export function validarCredenciais(usuario: string, senha: string): boolean {
+export function validarCredenciais(usuario: string, senha: string, permitirDesenvolvimento = false): boolean {
   const u = process.env["PAINEL_ADMIN_USER"];
   const p = process.env["PAINEL_ADMIN_PASSWORD"];
 
@@ -103,7 +110,7 @@ export function validarCredenciais(usuario: string, senha: string): boolean {
 
   // Fora de produção (preview/desenvolvimento) o acesso local sempre funciona,
   // mesmo que as variáveis administrativas estejam definidas com outros valores.
-  if (process.env["NODE_ENV"] !== "production") {
+  if (process.env["NODE_ENV"] !== "production" || permitirDesenvolvimento) {
     return iguais(usuario, "admin") && iguais(senha, "sesi2026");
   }
   return false;

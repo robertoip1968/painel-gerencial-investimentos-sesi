@@ -16,6 +16,7 @@ export const Route = createFileRoute("/api/auth/login")({
           validarCredenciais,
           criarToken,
           cookieDeSessao,
+          requisicaoEhDesenvolvimento,
           usarSecure,
         } = await import("@/lib/auth.server");
 
@@ -39,7 +40,8 @@ export const Route = createFileRoute("/api/auth/login")({
 
         const credsConfiguradas =
           !!process.env["PAINEL_ADMIN_USER"] && !!process.env["PAINEL_ADMIN_PASSWORD"];
-        if (!credsConfiguradas && process.env["NODE_ENV"] === "production") {
+        const ambienteDeDesenvolvimento = requisicaoEhDesenvolvimento(request);
+        if (!credsConfiguradas && process.env["NODE_ENV"] === "production" && !ambienteDeDesenvolvimento) {
           return new Response(
             JSON.stringify({
               error:
@@ -50,14 +52,14 @@ export const Route = createFileRoute("/api/auth/login")({
         }
 
 
-        if (!validarCredenciais(parsed.data.usuario.trim(), parsed.data.senha)) {
+        if (!validarCredenciais(parsed.data.usuario.trim(), parsed.data.senha, ambienteDeDesenvolvimento)) {
           return new Response(JSON.stringify({ error: "Usuário ou senha inválidos." }), {
             status: 401,
             headers: json,
           });
         }
 
-        const token = criarToken(parsed.data.usuario.trim());
+        const token = criarToken(parsed.data.usuario.trim(), ambienteDeDesenvolvimento);
         return new Response(JSON.stringify({ usuario: parsed.data.usuario.trim() }), {
           status: 200,
           headers: { ...json, "Set-Cookie": cookieDeSessao(token, usarSecure(request)) },
