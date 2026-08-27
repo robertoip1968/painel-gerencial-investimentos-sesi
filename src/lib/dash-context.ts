@@ -59,9 +59,9 @@ export function contextoDoPainel(
 
   const f = [
     `período: ${MESES[filtros.mesIni - 1]}–${MESES[filtros.mesFim - 1]}`,
-    `centro de custo: ${filtros.cc === TODOS ? "todos" : filtros.cc}`,
-    `item contábil: ${filtros.item === TODOS ? "todos" : filtros.item}`,
-    `conta contábil: ${filtros.conta === TODOS ? "todos" : filtros.conta}`,
+    `centro de custo: ${filtros.cc.length ? filtros.cc.join(", ") : "todos"}`,
+    `item contábil: ${filtros.item.length ? filtros.item.join(", ") : "todos"}`,
+    `conta contábil: ${filtros.conta.length ? filtros.conta.join(", ") : "todas"}`,
   ].join(" | ");
 
   return `BASE: ${d.fileName} — exercício ${ANO()} (valores em reais; aqui resumidos em R$ milhões).
