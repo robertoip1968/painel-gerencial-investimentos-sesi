@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 import { getSessao, sair } from "@/lib/auth-local";
 import {
@@ -46,7 +46,7 @@ import {
   ritmos,
   serieAcumulada,
 } from "@/lib/real-data";
-import { TODOS, opcoes, type Filtros } from "@/lib/facts";
+import { opcoes, type Filtros } from "@/lib/facts";
 
 
 
@@ -408,23 +408,26 @@ function DashboardInner() {
             onChange={num("mesFim")}
             options={mesOpts}
           />
-          <Filtro
+          <MultiFiltro
             label="Centro de Custo"
+            todos="Todos"
             value={filtros.cc}
             onChange={(v) => setFiltro("cc", v)}
-            options={listOpts(opcoes.cc, "Todos")}
+            options={opcoes.cc}
           />
-          <Filtro
+          <MultiFiltro
             label="Item Contábil"
+            todos="Todos"
             value={filtros.item}
             onChange={(v) => setFiltro("item", v)}
-            options={listOpts(opcoes.item, "Todos")}
+            options={opcoes.item}
           />
-          <Filtro
+          <MultiFiltro
             label="Conta Contábil"
+            todos="Todas"
             value={filtros.conta}
             onChange={(v) => setFiltro("conta", v)}
-            options={listOpts(opcoes.conta, "Todas")}
+            options={opcoes.conta}
           />
           <div className="flex items-center gap-3 sm:col-span-3 lg:col-span-6">
             <button
