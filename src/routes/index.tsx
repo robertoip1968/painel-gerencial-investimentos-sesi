@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
+import { ExecucaoPorArea } from "@/components/dashboard/areas";
 import { AtualizarBase } from "@/components/dashboard/atualizar-base";
 import { LancamentosConta } from "@/components/dashboard/lancamentos";
 import { AssistenteVirtual } from "@/components/dashboard/assistente";
@@ -545,6 +546,8 @@ function DashboardInner() {
             })}
           </div>
         </section>
+
+        <ExecucaoPorArea />
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
