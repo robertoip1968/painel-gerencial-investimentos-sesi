@@ -371,6 +371,11 @@ function DashboardInner() {
             className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
           >
             <Filter className="size-4" /> Filtros
+            {temFiltro && (
+              <span className="rounded-full bg-brand-foreground/20 px-1.5 text-[10px] font-semibold">
+                {filtros.cc.length + filtros.item.length + filtros.conta.length || "•"}
+              </span>
+            )}
             <ChevronDown
               className={`size-4 transition-transform ${filtrosAbertos ? "rotate-180" : ""}`}
             />
@@ -393,7 +398,9 @@ function DashboardInner() {
         <div
           id="filtros"
           hidden={!filtrosAbertos}
-          className="grid grid-cols-1 items-end gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6"
+          className={`grid grid-cols-1 items-end gap-4 rounded-lg border bg-card p-4 shadow-sm sm:grid-cols-3 lg:grid-cols-6 ${
+            temFiltro ? "border-brand ring-1 ring-brand/30" : "border-border"
+          }`}
         >
           <Filtro label="Ano" value={String(ANO())} options={[{ value: String(ANO()), label: String(ANO()) }]} />
           <Filtro
@@ -438,7 +445,7 @@ function DashboardInner() {
             >
               <RotateCcw className="size-4" /> Limpar filtros
             </button>
-            <span className="text-xs text-muted-foreground">
+            <span className={`text-xs ${temFiltro ? "font-medium text-brand" : "text-muted-foreground"}`}>
               {temFiltro
                   ? `Filtro ativo • ${dataset.linhas.toLocaleString("pt-BR")} lançamentos`
                   : "Nenhum filtro aplicado."}
