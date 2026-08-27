@@ -101,6 +101,36 @@ COMMENT ON TABLE dash_sesi.fin_shift_staging IS 'Staging bruto das cargas SHIFT 
 CREATE INDEX IF NOT EXISTS ix_stg_importacao ON dash_sesi.fin_shift_staging (importacao_id);
 
 -- -------------------------------------------------------------
+-- De-para de ÁREAS (agrupamento gerencial de centros de custo)
+-- A planilha SHIFT não traz a área; ela é mantida aqui por código.
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS dash_sesi.areas_centro_custo (
+  cod_centro_custo text PRIMARY KEY,
+  area             text NOT NULL
+);
+
+COMMENT ON TABLE dash_sesi.areas_centro_custo IS 'De-para centro de custo -> área (EDUCACAO, SAUDE, ALIMENTACAO, SUPORTE, CORPORATIVO). Manutenção manual.';
+
+INSERT INTO dash_sesi.areas_centro_custo (cod_centro_custo, area) VALUES
+  ('13040107','EDUCAÇÃO'),('13040115','EDUCAÇÃO'),('13040116','EDUCAÇÃO'),
+  ('1301120201','EDUCAÇÃO'),('13040114','EDUCAÇÃO'),
+  ('1301120202','SAÚDE'),('13040113','SAÚDE'),('13040117','SAÚDE'),
+  ('13040112','SAÚDE'),('13040106','SAÚDE'),('13040109','SAÚDE'),
+  ('13040119','ALIMENTAÇÃO'),('13040120','ALIMENTAÇÃO'),('13040121','ALIMENTAÇÃO'),
+  ('13040122','ALIMENTAÇÃO'),('13040123','ALIMENTAÇÃO'),('13040125','ALIMENTAÇÃO'),
+  ('13040126','ALIMENTAÇÃO'),('13040127','ALIMENTAÇÃO'),('13040128','ALIMENTAÇÃO'),
+  ('13040101','ALIMENTAÇÃO'),('1301120211','ALIMENTAÇÃO'),('13040124','ALIMENTAÇÃO'),
+  ('13040130','ALIMENTAÇÃO'),('13040129','ALIMENTAÇÃO'),
+  ('1301120104','SUPORTE'),('1301120216','SUPORTE'),('1301120210','SUPORTE'),
+  ('1301120208','SUPORTE'),('1301120213','SUPORTE'),('1301120102','SUPORTE'),
+  ('13050407','CORPORATIVO'),('13050403','CORPORATIVO'),('13050402','CORPORATIVO'),
+  ('13050304','CORPORATIVO'),('13050404','CORPORATIVO'),('13050310','CORPORATIVO'),
+  ('13050405','CORPORATIVO'),('13050401','CORPORATIVO'),('13050303','CORPORATIVO'),
+  ('13050202','CORPORATIVO'),('13050307','CORPORATIVO'),('13050301','CORPORATIVO'),
+  ('13050302','CORPORATIVO'),('13050406','CORPORATIVO')
+ON CONFLICT (cod_centro_custo) DO UPDATE SET area = EXCLUDED.area;
+
+-- -------------------------------------------------------------
 -- Visão agregada consumida pelo painel (uma linha por combinação)
 -- -------------------------------------------------------------
 -- A view preserva códigos E nomes: registros com códigos diferentes nunca são
@@ -109,23 +139,27 @@ CREATE INDEX IF NOT EXISTS ix_stg_importacao ON dash_sesi.fin_shift_staging (imp
 DROP VIEW IF EXISTS dash_sesi.vw_fatos;
 CREATE VIEW dash_sesi.vw_fatos AS
 SELECT
-  ano,
-  origem            AS tipo,
-  mes,
-  cod_centro_custo,
-  nome_centro_custo   AS centro_custo,
-  cod_item_contabil,
-  nome_item_contabil  AS item_contabil,
-  cod_conta_contabil,
-  nome_conta_contabil AS conta_contabil,
+  l.ano,
+  l.origem            AS tipo,
+  l.mes,
+  l.cod_centro_custo,
+  l.nome_centro_custo   AS centro_custo,
+  coalesce(a.area, 'NÃO CLASSIFICADO') AS area,
+  l.cod_item_contabil,
+  l.nome_item_contabil  AS item_contabil,
+  l.cod_conta_contabil,
+  l.nome_conta_contabil AS conta_contabil,
   count(*)::int     AS linhas,
-  sum(previsto)     AS previsto,
-  sum(realizado)    AS realizado
-FROM dash_sesi.lancamentos
-GROUP BY ano, origem, mes,
-         cod_centro_custo, nome_centro_custo,
-         cod_item_contabil, nome_item_contabil,
-         cod_conta_contabil, nome_conta_contabil;
+  sum(l.previsto)   AS previsto,
+  sum(l.realizado)  AS realizado
+FROM dash_sesi.lancamentos l
+LEFT JOIN dash_sesi.areas_centro_custo a
+       ON a.cod_centro_custo = l.cod_centro_custo
+GROUP BY l.ano, l.origem, l.mes,
+         l.cod_centro_custo, l.nome_centro_custo, a.area,
+         l.cod_item_contabil, l.nome_item_contabil,
+         l.cod_conta_contabil, l.nome_conta_contabil;
+
 
 COMMENT ON VIEW dash_sesi.vw_fatos IS 'Fatos agregados usados por KPIs, gráficos, filtros e tabelas do painel.';
 
