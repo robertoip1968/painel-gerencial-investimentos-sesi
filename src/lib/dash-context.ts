@@ -1,6 +1,5 @@
 import type { Dataset } from "@/lib/csv-import";
 import type { Filtros } from "@/lib/facts";
-import { TODOS } from "@/lib/facts";
 import {
   ANO,
   MESES,

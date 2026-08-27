@@ -132,7 +132,7 @@ export function montarPayload(ano: number, rows: LinhaFato[]): FatosPayloadDb {
     const achado = chaves[dim].get(chave);
     if (achado !== undefined) return achado;
     const jaExiste = nomes[dim].get(nome);
-    const rotulo = jaExiste !== undefined && codigo ? `${nome} (${codigo})` : nome;
+    const rotulo = codigo ? `${codigo} — ${nome}` : nome;
     list.push(rotulo);
     const i = list.length - 1;
     chaves[dim].set(chave, i);
