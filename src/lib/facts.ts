@@ -46,9 +46,9 @@ let base: FatosPayload = import.meta.env.DEV
 export type Filtros = {
   mesIni: number;
   mesFim: number;
-  cc: string;
-  item: string;
-  conta: string;
+  cc: string[];
+  item: string[];
+  conta: string[];
 };
 
 export const TODOS = "__todos__";
@@ -56,9 +56,9 @@ export const TODOS = "__todos__";
 export const filtrosPadrao: Filtros = {
   mesIni: 1,
   mesFim: 12,
-  cc: TODOS,
-  item: TODOS,
-  conta: TODOS,
+  cc: [],
+  item: [],
+  conta: [],
 };
 
 const ordenar = (l: string[]) => [...l].sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -109,20 +109,27 @@ export function filtrosAtivos(f: Filtros) {
   return (
     f.mesIni !== 1 ||
     f.mesFim !== 12 ||
-    f.cc !== TODOS ||
-    f.item !== TODOS ||
-    f.conta !== TODOS
+    f.cc.length > 0 ||
+    f.item.length > 0 ||
+    f.conta.length > 0
   );
 }
 
-function idxOf(list: string[], value: string) {
-  return value === TODOS ? -1 : list.indexOf(value);
+/** Conjunto de índices selecionados; null = sem filtro (todos). */
+function idxSet(list: string[], values: string[]): Set<number> | null {
+  if (!values || values.length === 0) return null;
+  const s = new Set<number>();
+  for (const v of values) {
+    const i = list.indexOf(v);
+    if (i >= 0) s.add(i);
+  }
+  return s;
 }
 
 function build(b: Bloco, f: Filtros, fileName: string): Dataset {
-  const ccIdx = idxOf(base.cc, f.cc);
-  const itemIdx = idxOf(base.item, f.item);
-  const contaIdx = idxOf(base.conta, f.conta);
+  const ccIdx = idxSet(base.cc, f.cc);
+  const itemIdx = idxSet(base.item, f.item);
+  const contaIdx = idxSet(base.conta, f.conta);
 
   const mensal = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, previsto: 0, realizado: 0 }));
   const mapCC = new Map<string, SegRow>();
@@ -142,9 +149,9 @@ function build(b: Bloco, f: Filtros, fileName: string): Dataset {
   for (let i = 0; i < b.n; i++) {
     const m = b.mes[i]!;
     if (m < f.mesIni || m > f.mesFim) continue;
-    if (ccIdx >= 0 && b.cc[i] !== ccIdx) continue;
-    if (itemIdx >= 0 && b.item[i] !== itemIdx) continue;
-    if (contaIdx >= 0 && b.conta[i] !== contaIdx) continue;
+    if (ccIdx && !ccIdx.has(b.cc[i]!)) continue;
+    if (itemIdx && !itemIdx.has(b.item[i]!)) continue;
+    if (contaIdx && !contaIdx.has(b.conta[i]!)) continue;
 
     const p = b.previsto[i]!;
     const r = b.realizado[i]!;
@@ -199,16 +206,16 @@ export type Lancamento = {
 /** Lançamentos (nível mais detalhado disponível na planilha: mês x centro de custo x item x conta). */
 export function lancamentosFiltrados(f: Filtros): Lancamento[] {
   const b = base.despesa;
-  const ccIdx = idxOf(base.cc, f.cc);
-  const itemIdx = idxOf(base.item, f.item);
-  const contaIdx = idxOf(base.conta, f.conta);
+  const ccIdx = idxSet(base.cc, f.cc);
+  const itemIdx = idxSet(base.item, f.item);
+  const contaIdx = idxSet(base.conta, f.conta);
   const out: Lancamento[] = [];
   for (let i = 0; i < b.n; i++) {
     const m = b.mes[i]!;
     if (m < f.mesIni || m > f.mesFim) continue;
-    if (ccIdx >= 0 && b.cc[i] !== ccIdx) continue;
-    if (itemIdx >= 0 && b.item[i] !== itemIdx) continue;
-    if (contaIdx >= 0 && b.conta[i] !== contaIdx) continue;
+    if (ccIdx && !ccIdx.has(b.cc[i]!)) continue;
+    if (itemIdx && !itemIdx.has(b.item[i]!)) continue;
+    if (contaIdx && !contaIdx.has(b.conta[i]!)) continue;
     out.push({
       mes: m,
       cc: base.cc[b.cc[i]!]!,

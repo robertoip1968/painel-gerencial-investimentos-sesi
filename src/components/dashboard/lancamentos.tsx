@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Download, Receipt } from "lucide-react";
 import { useDataset } from "@/lib/dataset-store";
-import { lancamentosFiltrados, TODOS } from "@/lib/facts";
+import { lancamentosFiltrados } from "@/lib/facts";
 import { brl } from "@/lib/dashboard-data";
 import { MESES } from "@/lib/real-data";
 
@@ -12,7 +12,7 @@ export function LancamentosConta() {
   const [busca, setBusca] = useState("");
   const [limite, setLimite] = useState(PAGINA);
 
-  const ativo = !isUpload && filtros.conta !== TODOS;
+  const ativo = !isUpload && filtros.conta.length > 0;
 
   const linhas = useMemo(() => (ativo ? lancamentosFiltrados(filtros) : []), [ativo, filtros]);
 
@@ -67,7 +67,7 @@ export function LancamentosConta() {
             <Receipt className="size-4 text-brand" /> Lançamentos Contábeis
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Conta <strong className="text-foreground">{filtros.conta}</strong> — detalhamento por
+            Conta <strong className="text-foreground">{filtros.conta.join(", ")}</strong> — detalhamento por
             mês, centro de custo e item contábil ({totais.linhas} registros na planilha).
           </p>
         </div>
