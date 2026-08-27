@@ -144,11 +144,122 @@ function Filtro({
   );
 }
 
+function MultiFiltro({
+  label,
+  todos,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  todos: string;
+  options: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const ativo = value.length > 0;
+
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
+    };
+    document.addEventListener("mousedown", fora);
+    return () => document.removeEventListener("mousedown", fora);
+  }, [aberto]);
+
+  const q = busca.trim().toLowerCase();
+  const visiveis = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+  const alternar = (o: string) =>
+    onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
+
+  const resumo = !ativo
+    ? todos
+    : value.length === 1
+      ? value[0]!
+      : `${value.length} selecionados`;
+
+  return (
+    <div className="min-w-0" ref={ref}>
+      <span
+        className={`text-[11px] font-medium ${ativo ? "text-brand" : "text-muted-foreground"}`}
+      >
+        {label}
+        {ativo ? ` • ${value.length}` : ""}
+      </span>
+      <div className="relative mt-1">
+        <button
+          type="button"
+          onClick={() => setAberto((a) => !a)}
+          aria-label={label}
+          aria-expanded={aberto}
+          className={`flex w-full items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-left text-sm ${
+            ativo
+              ? "border-brand bg-brand/10 font-medium text-brand"
+              : "border-border bg-background text-foreground"
+          }`}
+        >
+          <span className="truncate">{resumo}</span>
+          <ChevronDown className="size-4 shrink-0 opacity-70" />
+        </button>
+        {aberto && (
+          <div className="absolute z-30 mt-1 max-h-80 w-[min(24rem,80vw)] overflow-hidden rounded-md border border-border bg-card shadow-lg">
+            <div className="border-b border-border p-2">
+              <input
+                autoFocus
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Pesquisar…"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+              />
+              <div className="mt-2 flex items-center justify-between text-[11px]">
+                <button
+                  type="button"
+                  className="font-medium text-brand hover:underline"
+                  onClick={() => onChange(Array.from(new Set([...value, ...visiveis])))}
+                >
+                  Selecionar tudo
+                </button>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:underline"
+                  onClick={() => onChange([])}
+                >
+                  Limpar
+                </button>
+              </div>
+            </div>
+            <div className="max-h-56 overflow-y-auto p-1">
+              {visiveis.length === 0 && (
+                <p className="p-2 text-xs text-muted-foreground">Nenhum resultado.</p>
+              )}
+              {visiveis.slice(0, 500).map((o) => (
+                <label
+                  key={o}
+                  className="flex cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted"
+                >
+                  <input
+                    type="checkbox"
+                    checked={value.includes(o)}
+                    onChange={() => alternar(o)}
+                    className="mt-0.5 size-3.5 accent-[var(--brand)]"
+                  />
+                  <span className="leading-snug">{o}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const mesOpts = MESES.map((m, i) => ({ value: String(i + 1), label: m }));
-const listOpts = (l: string[], todos: string) => [
-  { value: TODOS, label: todos },
-  ...l.map((n) => ({ value: n, label: n })),
-];
+
 
 
 function Dashboard() {
