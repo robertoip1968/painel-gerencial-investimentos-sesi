@@ -12,7 +12,7 @@ import {
   CircleDollarSign,
   Coins,
   Database,
-  FileText,
+  
   Filter,
   Info,
   MinusCircle,
@@ -20,8 +20,7 @@ import {
   RotateCcw,
   Target,
   TrendingUp,
-  User,
-  Wallet,
+User,
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
@@ -75,10 +74,8 @@ export const Route = createFileRoute("/")({
 
 const kpiIcons = {
   coins: Coins,
-  file: FileText,
   check: CheckCircle2,
   pie: PieIcon,
-  wallet: Wallet,
   trend: TrendingUp,
   target: Target,
 } as const;

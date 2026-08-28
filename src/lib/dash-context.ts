@@ -73,7 +73,7 @@ DESPESA (recorte atual)
 - Previsto: R$ ${n2(d.previsto)} mi
 - Realizado (inclui o mês parcial, quando houver): R$ ${n2(d.realizado)} mi (${pc(d.realizado, d.previsto)}% do previsto)
 - Saldo a executar: R$ ${n2(saldo)} mi
-- Comprometido: não disponível na base oficial (não use esse conceito na resposta)
+
 - Período dos dados: ${MESES[0]}–${MESES[mUlt - 1]}/${ANO()}
 - Último mês fechado: ${MESES[mb - 1]}/${ANO()} (mês ${mb}); meta linear do período: ${meta.toFixed(1)}%
 - ${parcial > 0 && mUlt >= parcial ? `${MESES[parcial - 1]}/${ANO()}: parcial (tem realizado, mas o mês ainda não encerrou)` : "Não há mês parcial com execução registrada"}

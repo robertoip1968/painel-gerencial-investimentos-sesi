@@ -1,26 +1,6 @@
 export const brl = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const kpis = [
-  { label: "Orçamento (Previsto)", value: "R$ 52,73 mi", sub: "100% do total", icon: "coins" },
-  { label: "Comprometido", value: "R$ 18,64 mi", sub: "35,35% do orçamento", icon: "file" },
-  { label: "Realizado", value: "R$ 11,70 mi", sub: "22,19% do orçamento", icon: "check" },
-  { label: "Saldo a Executar", value: "R$ 41,03 mi", sub: "77,81% do orçamento", icon: "pie" },
-  {
-    label: "Disponível após compromissos",
-    value: "R$ 22,39 mi",
-    sub: "42,45% do orçamento",
-    icon: "wallet",
-  },
-  { label: "Forecast Dez/2026", value: "R$ 45,80 mi", sub: "86,85% do orçamento", icon: "trend" },
-  {
-    label: "Desvio Forecast",
-    value: "- R$ 6,93 mi",
-    sub: "-13,15% do orçamento",
-    icon: "target",
-    negative: true,
-  },
-] as const;
 
 export const execucaoMensal = [
   { mes: "JAN", previsto: 4.4, realizado: 1.6, forecast: null as number | null },
