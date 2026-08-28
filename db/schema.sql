@@ -193,3 +193,17 @@ GROUP BY ano, origem;
 COMMENT ON VIEW dash_sesi.vw_kpis IS 'KPIs consolidados do exercício por origem (DESPESA/RECEITA).';
 COMMENT ON COLUMN dash_sesi.vw_kpis.ultimo_mes_com_realizado IS 'Último mês com realizado <> 0. NÃO representa mês encerrado — o mês fechado oficial vem de PAINEL_MES_FECHADO na aplicação.';
 
+
+-- -------------------------------------------------------------
+-- PERMISSÕES
+-- Roles (painel_app, n8n_agent) são criados pela infraestrutura.
+-- Aqui garantimos acesso aos objetos do schema.
+-- Ajuste os nomes conforme o usuário real usado em DATABASE_URL.
+-- -------------------------------------------------------------
+GRANT USAGE  ON SCHEMA dash_sesi TO painel_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES    IN SCHEMA dash_sesi TO painel_app;
+GRANT SELECT, USAGE, UPDATE ON ALL SEQUENCES          IN SCHEMA dash_sesi TO painel_app;
+
+-- n8n_agent: somente leitura das visões consumidas pelo assistente.
+GRANT USAGE  ON SCHEMA dash_sesi TO n8n_agent;
+GRANT SELECT ON dash_sesi.vw_fatos, dash_sesi.vw_kpis TO n8n_agent;
