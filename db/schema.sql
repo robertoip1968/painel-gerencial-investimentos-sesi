@@ -2,6 +2,18 @@
 -- Painel Gerencial de Investimentos — SESI/MT
 -- Banco: sesi_investimentos   |   Schema: dash_sesi
 -- PostgreSQL 17 — script idempotente
+-- =============================================================
+
+-- ------------------------------------------------------------------
+-- 1) CRIAÇÃO DO BANCO (executar uma única vez, como superusuário)
+--    CREATE DATABASE não pode rodar dentro de transação nem se repetir
+--    quando o banco já existe. Por isso fica destacado/acima do resto.
+--    Uso:  psql -h <host> -U postgres -c "CREATE DATABASE sesi_investimentos;"
+-- ------------------------------------------------------------------
+-- CREATE DATABASE sesi_investimentos
+--   WITH OWNER = painel_app ENCODING 'UTF8' TEMPLATE template0;
+
+-- Depois conecte ao banco criado e rode o restante deste arquivo:
 -- Uso:  psql "$DATABASE_URL" -f db/schema.sql
 -- Obs.: roles/usuários (painel_app, n8n_agent) são geridos pela
 --       infraestrutura e NÃO são criados aqui.
