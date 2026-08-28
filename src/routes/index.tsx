@@ -12,7 +12,7 @@ import {
   CircleDollarSign,
   Coins,
   Database,
-  FileText,
+  
   Filter,
   Info,
   MinusCircle,
