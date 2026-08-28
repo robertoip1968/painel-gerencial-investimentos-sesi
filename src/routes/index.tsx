@@ -20,8 +20,7 @@ import {
   RotateCcw,
   Target,
   TrendingUp,
-  User,
-  Wallet,
+User,
 } from "lucide-react";
 import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dashboard/charts";
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
