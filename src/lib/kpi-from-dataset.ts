@@ -14,14 +14,8 @@ export function kpisFromDataset(d: Dataset): Kpi[] {
   const saldo = d.previsto - d.realizado;
   const forecast = forecastAno(d);
   const desvio = forecast - d.previsto;
-  return [
+return [
     { label: "Orçamento (Previsto)", value: mi(d.previsto), sub: "100% do total", icon: "coins" },
-    {
-      label: "Comprometido",
-      value: "Não disponível",
-      sub: "não informado na base oficial",
-      icon: "file",
-    },
     { label: "Realizado", value: mi(d.realizado), sub: `${pctFmt(d.realizado, d.previsto)} do orçamento`, icon: "check" },
     { label: "Saldo a Executar", value: mi(saldo), sub: `${pctFmt(saldo, d.previsto)} do orçamento`, icon: "pie" },
     { label: "Forecast (ritmo atual)", value: mi(forecast), sub: `${pctFmt(forecast, d.previsto)} do orçamento`, icon: "trend" },
