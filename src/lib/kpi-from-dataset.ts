@@ -5,7 +5,7 @@ export type Kpi = {
   label: string;
   value: string;
   sub: string;
-  icon: "coins" | "check" | "pie" | "wallet" | "trend" | "target";
+  icon: "coins" | "check" | "pie" | "trend" | "target";
   negative?: boolean;
 };
 
