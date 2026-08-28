@@ -75,10 +75,8 @@ export const Route = createFileRoute("/")({
 
 const kpiIcons = {
   coins: Coins,
-  file: FileText,
   check: CheckCircle2,
   pie: PieIcon,
-  wallet: Wallet,
   trend: TrendingUp,
   target: Target,
 } as const;
