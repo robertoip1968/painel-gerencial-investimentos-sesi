@@ -20,6 +20,7 @@ export function AtualizarBase() {
   const [detalhes, setDetalhes] = useState<string[]>([]);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const semBanco = /DATABASE_URL|não configurado|conex/i.test(erro ?? "");
 
   async function enviar(file: File) {
     setErro(null);
