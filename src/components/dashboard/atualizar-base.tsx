@@ -20,6 +20,7 @@ export function AtualizarBase() {
   const [detalhes, setDetalhes] = useState<string[]>([]);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const semBanco = /DATABASE_URL|não configurado|conex/i.test(erro ?? "");
 
   async function enviar(file: File) {
     setErro(null);
@@ -114,6 +115,15 @@ export function AtualizarBase() {
           <p className="flex items-center gap-2 font-semibold text-crit">
             <AlertTriangle className="size-4" /> {erro}
           </p>
+          {semBanco ? (
+            <p className="mt-2 pl-6 text-muted-foreground">
+              O banco PostgreSQL do painel fica na intranet do SESI/MT (10.52.29.138) e não é
+              alcançável a partir deste ambiente de pré-visualização. A atualização da base só
+              funciona com o painel publicado no servidor on-premise, com a variável{" "}
+              <code className="rounded bg-muted px-1">DATABASE_URL</code> preenchida no arquivo{" "}
+              <code className="rounded bg-muted px-1">.env</code>.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
