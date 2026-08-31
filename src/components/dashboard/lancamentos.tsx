@@ -12,7 +12,7 @@ export function LancamentosConta() {
   const [busca, setBusca] = useState("");
   const [limite, setLimite] = useState(PAGINA);
 
-  const ativo = !isUpload;
+  const ativo = !isUpload && filtros.conta.length > 0;
 
   const linhas = useMemo(() => (ativo ? lancamentosFiltrados(filtros) : []), [ativo, filtros]);
 
