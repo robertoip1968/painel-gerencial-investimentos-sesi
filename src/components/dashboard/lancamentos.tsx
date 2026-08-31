@@ -12,7 +12,7 @@ export function LancamentosConta() {
   const [busca, setBusca] = useState("");
   const [limite, setLimite] = useState(PAGINA);
 
-  const ativo = !isUpload && filtros.conta.length > 0;
+  const ativo = !isUpload;
 
   const linhas = useMemo(() => (ativo ? lancamentosFiltrados(filtros) : []), [ativo, filtros]);
 
@@ -67,8 +67,15 @@ export function LancamentosConta() {
             <Receipt className="size-4 text-brand" /> Lançamentos Contábeis
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Conta <strong className="text-foreground">{filtros.conta.join(", ")}</strong> — detalhamento por
-            mês, centro de custo e item contábil ({totais.linhas} registros na planilha).
+            {filtros.conta.length > 0 ? (
+              <>
+                Conta <strong className="text-foreground">{filtros.conta.join(", ")}</strong> —{" "}
+              </>
+            ) : (
+              <>Todas as contas contábeis do recorte atual — </>
+            )}
+            detalhamento por mês, centro de custo e item contábil ({totais.linhas} registros na
+            planilha).
           </p>
         </div>
         <div className="flex items-center gap-2">
