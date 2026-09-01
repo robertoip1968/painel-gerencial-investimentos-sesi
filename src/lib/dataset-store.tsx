@@ -56,6 +56,7 @@ const DatasetContext = createContext<Ctx>({
   risco: null,
   setRisco: () => {},
   recarregar: async () => {},
+  aplicarLocais: () => {},
   carregando: false,
   erroDados: null,
   fonte: "local",
@@ -106,6 +107,13 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     void recarregar();
   }, [recarregar]);
 
+  const aplicarLocais = useCallback((p: FatosPayload) => {
+    aplicarFatos(p);
+    setFonte("local");
+    setErroDados(null);
+    setVersao((v) => v + 1);
+  }, []);
+
   const setFiltro = useCallback(
     <K extends keyof Filtros>(k: K, v: Filtros[K]) => setFiltros((f) => ({ ...f, [k]: v })),
     [],
@@ -129,11 +137,12 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       risco,
       setRisco,
       recarregar,
+      aplicarLocais,
       carregando,
       erroDados,
       fonte,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, carregando, erroDados, fonte]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
