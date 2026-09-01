@@ -15,6 +15,7 @@ import {
   receitaFiltrada,
   vazio,
   type Filtros,
+  type FatosPayload,
   filtrosAtivos,
 } from "@/lib/facts";
 import { carregarFatos } from "@/lib/fatos.functions";
@@ -35,6 +36,8 @@ type Ctx = {
   setRisco: (r: RiscoFiltro) => void;
   /** Recarrega os fatos direto do PostgreSQL (após importação, por exemplo). */
   recarregar: () => Promise<void>;
+  /** DEV/preview: aplica fatos lidos localmente do .xlsx (sem banco). */
+  aplicarLocais: (p: FatosPayload) => void;
   carregando: boolean;
   /** Mensagem de indisponibilidade dos dados oficiais (produção). */
   erroDados: string | null;
@@ -53,6 +56,7 @@ const DatasetContext = createContext<Ctx>({
   risco: null,
   setRisco: () => {},
   recarregar: async () => {},
+  aplicarLocais: () => {},
   carregando: false,
   erroDados: null,
   fonte: "local",
@@ -103,6 +107,13 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     void recarregar();
   }, [recarregar]);
 
+  const aplicarLocais = useCallback((p: FatosPayload) => {
+    aplicarFatos(p);
+    setFonte("local");
+    setErroDados(null);
+    setVersao((v) => v + 1);
+  }, []);
+
   const setFiltro = useCallback(
     <K extends keyof Filtros>(k: K, v: Filtros[K]) => setFiltros((f) => ({ ...f, [k]: v })),
     [],
@@ -126,11 +137,12 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       risco,
       setRisco,
       recarregar,
+      aplicarLocais,
       carregando,
       erroDados,
       fonte,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, carregando, erroDados, fonte]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }

@@ -14,7 +14,8 @@ type Resultado = {
 };
 
 export function AtualizarBase() {
-  const { recarregar, fonte, dataset } = useDataset();
+  const { recarregar, aplicarLocais, fonte, dataset } = useDataset();
+  const modoLocal = import.meta.env.DEV;
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<string[]>([]);
@@ -28,6 +29,27 @@ export function AtualizarBase() {
     setResultado(null);
     setEnviando(true);
     try {
+      if (modoLocal) {
+        const { importarLocalmente } = await import("@/lib/import-local");
+        const r = await importarLocalmente(file);
+        if (r.rejeitadas.length > 0) {
+          setErro(
+            `Importação cancelada: ${r.rejeitadas.length} de ${r.total} linha(s) não passaram na validação.`,
+          );
+          setDetalhes(r.rejeitadas.slice(0, 20).map((x) => `Linha ${x.linha}: ${x.motivo}`));
+          return;
+        }
+        aplicarLocais(r.payload);
+        setResultado({
+          ok: true,
+          arquivo: file.name,
+          linhasEncontradas: r.total,
+          linhasImportadas: r.importadas,
+          linhasRejeitadas: 0,
+          dataHora: new Date().toISOString(),
+        });
+        return;
+      }
       const fd = new FormData();
       fd.append("arquivo", file);
       const r = await fetch("/api/importar", {
@@ -70,6 +92,12 @@ export function AtualizarBase() {
             de Custo, Item Contábil, Conta Contábil, Previsto e Realizado. A carga é tudo-ou-nada:
             qualquer linha inválida cancela a importação e a base anterior é mantida.
           </p>
+          {modoLocal ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Modo pré-visualização: a planilha é lida apenas no navegador, sem gravar no
+              PostgreSQL. Ao recarregar a página os dados voltam ao conjunto de demonstração.
+            </p>
+          ) : null}
 
         </div>
         <div className="flex items-center gap-2">
