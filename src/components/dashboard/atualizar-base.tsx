@@ -14,7 +14,8 @@ type Resultado = {
 };
 
 export function AtualizarBase() {
-  const { recarregar, fonte, dataset } = useDataset();
+  const { recarregar, aplicarLocais, fonte, dataset } = useDataset();
+  const modoLocal = import.meta.env.DEV;
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<string[]>([]);
