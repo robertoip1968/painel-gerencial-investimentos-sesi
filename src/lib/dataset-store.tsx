@@ -15,6 +15,7 @@ import {
   receitaFiltrada,
   vazio,
   type Filtros,
+  type FatosPayload,
   filtrosAtivos,
 } from "@/lib/facts";
 import { carregarFatos } from "@/lib/fatos.functions";
