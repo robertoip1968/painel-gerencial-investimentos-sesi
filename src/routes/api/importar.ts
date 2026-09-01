@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const json = { "Content-Type": "application/json" };
-const MAX_BYTES = 25 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 
 export const Route = createFileRoute("/api/importar")({
   server: {
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/importar")({
           });
         }
         if (file.size > MAX_BYTES) {
-          return new Response(JSON.stringify({ error: "Arquivo maior que 25 MB." }), {
+          return new Response(JSON.stringify({ error: "Arquivo maior que 50 MB." }), {
             status: 413,
             headers: json,
           });
@@ -37,32 +37,28 @@ export const Route = createFileRoute("/api/importar")({
 
         const nome = file.name;
         const ext = nome.toLowerCase().split(".").pop() ?? "";
-        if (!["xlsx", "xls", "csv"].includes(ext)) {
+        if (ext !== "xlsx") {
           return new Response(
-            JSON.stringify({ error: "Formato não suportado. Envie .xlsx, .xls ou .csv." }),
+            JSON.stringify({ error: "Formato não suportado. Envie um arquivo Excel .xlsx." }),
             { status: 400, headers: json },
           );
         }
 
-        const { csvParaMatriz, normalizarMatriz } = await import("@/lib/import-normalize");
+        const { normalizarMatriz } = await import("@/lib/import-normalize");
         const anoPadrao = Number(process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear());
 
         let matriz: (string | number | null | undefined)[][];
         try {
-          if (ext === "csv") {
-            matriz = csvParaMatriz(await file.text());
-          } else {
-            const XLSX = await import("xlsx");
-            const buf = new Uint8Array(await file.arrayBuffer());
-            const wb = XLSX.read(buf, { type: "array" });
-            const sheetName = wb.SheetNames[0];
-            if (!sheetName) throw new Error("Planilha sem abas.");
-            const sheet = wb.Sheets[sheetName]!;
-            matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" }) as (
-              | string
-              | number
-            )[][];
-          }
+          const XLSX = await import("xlsx");
+          const buf = new Uint8Array(await file.arrayBuffer());
+          const wb = XLSX.read(buf, { type: "array" });
+          const sheetName = wb.SheetNames[0];
+          if (!sheetName) throw new Error("Planilha sem abas.");
+          const sheet = wb.Sheets[sheetName]!;
+          matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" }) as (
+            | string
+            | number
+          )[][];
         } catch (e) {
           return new Response(
             JSON.stringify({
