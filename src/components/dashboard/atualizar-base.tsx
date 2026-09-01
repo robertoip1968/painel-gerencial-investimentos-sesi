@@ -66,7 +66,7 @@ export function AtualizarBase() {
             </span>
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Envie a planilha SHIFT (.xlsx, .xls ou .csv) com Origem, Cód. Empresa, Ano, Mês, Centro
+            Envie a planilha SHIFT em Excel (.xlsx, até 50 MB) com Origem, Cód. Empresa, Ano, Mês, Centro
             de Custo, Item Contábil, Conta Contábil, Previsto e Realizado. A carga é tudo-ou-nada:
             qualquer linha inválida cancela a importação e a base anterior é mantida.
           </p>
@@ -76,7 +76,7 @@ export function AtualizarBase() {
           <input
             ref={inputRef}
             type="file"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
