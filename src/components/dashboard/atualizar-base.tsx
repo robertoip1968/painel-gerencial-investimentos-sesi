@@ -92,6 +92,12 @@ export function AtualizarBase() {
             de Custo, Item Contábil, Conta Contábil, Previsto e Realizado. A carga é tudo-ou-nada:
             qualquer linha inválida cancela a importação e a base anterior é mantida.
           </p>
+          {modoLocal ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Modo pré-visualização: a planilha é lida apenas no navegador, sem gravar no
+              PostgreSQL. Ao recarregar a página os dados voltam ao conjunto de demonstração.
+            </p>
+          ) : null}
 
         </div>
         <div className="flex items-center gap-2">
