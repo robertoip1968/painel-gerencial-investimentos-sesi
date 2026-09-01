@@ -29,6 +29,27 @@ export function AtualizarBase() {
     setResultado(null);
     setEnviando(true);
     try {
+      if (modoLocal) {
+        const { importarLocalmente } = await import("@/lib/import-local");
+        const r = await importarLocalmente(file);
+        if (r.rejeitadas.length > 0) {
+          setErro(
+            `Importação cancelada: ${r.rejeitadas.length} de ${r.total} linha(s) não passaram na validação.`,
+          );
+          setDetalhes(r.rejeitadas.slice(0, 20).map((x) => `Linha ${x.linha}: ${x.motivo}`));
+          return;
+        }
+        aplicarLocais(r.payload);
+        setResultado({
+          ok: true,
+          arquivo: file.name,
+          linhasEncontradas: r.total,
+          linhasImportadas: r.importadas,
+          linhasRejeitadas: 0,
+          dataHora: new Date().toISOString(),
+        });
+        return;
+      }
       const fd = new FormData();
       fd.append("arquivo", file);
       const r = await fetch("/api/importar", {
