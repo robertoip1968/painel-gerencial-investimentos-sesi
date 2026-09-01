@@ -76,6 +76,88 @@ export const norm = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/["']/g, "");
 
+
+/**
+ * Normaliza códigos vindos do Excel.
+ *
+ * - mantém códigos textuais intactos;
+ * - transforma números seguros em texto integral;
+ * - expande notação científica textual;
+ * - bloqueia códigos numéricos com 16+ dígitos, pois o Excel pode
+ *   já ter perdido precisão antes da importação.
+ */
+export function normalizarCodigo(
+  v: string | number | null | undefined,
+): string {
+  if (v === null || v === undefined) return "";
+
+  if (typeof v === "number") {
+    if (!Number.isFinite(v)) return "";
+
+    if (!Number.isInteger(v)) {
+      throw new Error(`Código numérico inválido (possui casas decimais): ${v}`);
+    }
+
+    // Excel mantém somente cerca de 15 dígitos significativos.
+    // Códigos maiores devem obrigatoriamente vir armazenados como texto.
+    if (Math.abs(v) >= 1_000_000_000_000_000) {
+      throw new Error(
+        `Código numérico com 16 ou mais dígitos (${v}). ` +
+          `O Excel pode ter perdido precisão. Formate essa coluna como Texto na origem.`,
+      );
+    }
+
+    return String(v);
+  }
+
+  const original = String(v).trim();
+  if (!original) return "";
+
+  // Se não estiver em notação científica, mantém exatamente o texto,
+  // inclusive eventuais zeros à esquerda.
+  const cientifica = /^([+-]?)(\d+)(?:[.,](\d+))?[eE]([+-]?\d+)$/.exec(original);
+
+  if (!cientifica) return original;
+
+  const sinal = cientifica[1] === "-" ? "-" : "";
+  const parteInteira = cientifica[2]!;
+  const parteDecimal = cientifica[3] ?? "";
+  const expoente = Number(cientifica[4]);
+
+  if (!Number.isInteger(expoente) || Math.abs(expoente) > 1000) {
+    throw new Error(`Código em notação científica inválida: ${original}`);
+  }
+
+  const digitos = parteInteira + parteDecimal;
+  const posicaoDecimal = parteInteira.length + expoente;
+
+  let expandido: string;
+
+  if (posicaoDecimal <= 0) {
+    expandido = "0." + "0".repeat(-posicaoDecimal) + digitos;
+  } else if (posicaoDecimal >= digitos.length) {
+    expandido = digitos + "0".repeat(posicaoDecimal - digitos.length);
+  } else {
+    expandido =
+      digitos.slice(0, posicaoDecimal) +
+      "." +
+      digitos.slice(posicaoDecimal);
+  }
+
+  // Código deve representar um inteiro.
+  if (expandido.includes(".")) {
+    const [inteiro, decimal = ""] = expandido.split(".");
+    if (!/^0*$/.test(decimal)) {
+      throw new Error(
+        `Código em notação científica não representa um inteiro: ${original}`,
+      );
+    }
+    expandido = inteiro!;
+  }
+
+  return sinal + expandido;
+}
+
 /** Converte "1.234.567,89", "R$ 1.234,56", "(1.234,56)" etc. para número. */
 export function parseNumber(v: string | number | null | undefined): number {
   if (typeof v === "number") return isFinite(v) ? v : 0;
@@ -284,7 +366,7 @@ export function normalizarMatriz(
       return;
     }
 
-    const codCentroCusto = get(c, map.codCentroCusto);
+    const codCentroCusto = normalizarCodigo(get(c, map.codCentroCusto));
     const centroCusto = get(c, map.centroCusto) || codCentroCusto;
     if (!centroCusto) {
       rejeitadas.push({ linha: numeroLinha, motivo: "Centro de custo ausente" });
@@ -324,12 +406,12 @@ export function normalizarMatriz(
       return;
     }
 
-    const codItem = get(c, map.codItem);
-    const codConta = get(c, map.codConta);
+    const codItem = normalizarCodigo(get(c, map.codItem));
+    const codConta = normalizarCodigo(get(c, map.codConta));
 
     linhas.push({
       origem,
-      codEmpresa: get(c, map.codEmpresa) || "02MT",
+      codEmpresa: normalizarCodigo(get(c, map.codEmpresa)) || "02MT",
       ano,
       mes,
       codCentroCusto,

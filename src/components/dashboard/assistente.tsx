@@ -25,6 +25,18 @@ const SUGESTOES = [
 
 type Msg = { id: string; role: "user" | "assistant"; text: string };
 
+
+function gerarIdMensagem() {
+  if (
+    typeof globalThis.crypto !== "undefined" &&
+    typeof globalThis.crypto.randomUUID === "function"
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function AssistenteVirtual() {
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState("");
@@ -44,7 +56,7 @@ export function AssistenteVirtual() {
     setTexto("");
     setErro(null);
     const historico = messages.map((m) => ({ role: m.role, text: m.text }));
-    setMessages((m) => [...m, { id: crypto.randomUUID(), role: "user", text: pergunta }]);
+    setMessages((m) => [...m, { id: gerarIdMensagem(), role: "user", text: pergunta }]);
     setCarregando(true);
     try {
       const resp = await fetch("/api/chat", {
@@ -58,7 +70,7 @@ export function AssistenteVirtual() {
       } else {
         setMessages((m) => [
           ...m,
-          { id: crypto.randomUUID(), role: "assistant", text: data.resposta! },
+          { id: gerarIdMensagem(), role: "assistant", text: data.resposta! },
         ]);
       }
     } catch {

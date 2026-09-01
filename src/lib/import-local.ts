@@ -46,7 +46,7 @@ export async function importarLocalmente(file: File): Promise<ResultadoLocal> {
   if (!sheetName) throw new Error("Planilha sem abas.");
   const matriz = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]!, {
     header: 1,
-    raw: false,
+    raw: true,
     defval: "",
   }) as (string | number)[][];
 

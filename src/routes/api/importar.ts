@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/importar")({
           const sheetName = wb.SheetNames[0];
           if (!sheetName) throw new Error("Planilha sem abas.");
           const sheet = wb.Sheets[sheetName]!;
-          matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" }) as (
+          matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: "" }) as (
             | string
             | number
           )[][];
