@@ -35,6 +35,8 @@ type Ctx = {
   setRisco: (r: RiscoFiltro) => void;
   /** Recarrega os fatos direto do PostgreSQL (após importação, por exemplo). */
   recarregar: () => Promise<void>;
+  /** DEV/preview: aplica fatos lidos localmente do .xlsx (sem banco). */
+  aplicarLocais: (p: FatosPayload) => void;
   carregando: boolean;
   /** Mensagem de indisponibilidade dos dados oficiais (produção). */
   erroDados: string | null;
