@@ -148,18 +148,27 @@ export function parseMes(v: string | number | null | undefined): number | null {
 export function mapColumns(headers: (string | number)[]) {
   const nh = headers.map((h) => norm(String(h)));
   const map: Partial<Record<CampoPlanilha, number>> = {};
+  // Busca alias a alias (do mais específico para o mais genérico) para evitar
+  // que "conta" case com "nomeItemContabil" ("nome-item-CONTAbil").
+  const buscar = (aliases: string[], filtro: (h: string) => boolean) => {
+    for (const a of aliases) {
+      const i = nh.findIndex((h) => filtro(h) && h.includes(a));
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
   (Object.keys(ALIASES) as CampoPlanilha[]).forEach((key) => {
-    let idx = nh.findIndex((h) => ALIASES[key].includes(h));
-    // prefere colunas de nome (nomeCentroCusto) em vez de códigos (codCentroCusto)
-    if (idx < 0)
-      idx = nh.findIndex((h) => h.startsWith("nome") && ALIASES[key].some((a) => h.includes(a)));
-    if (idx < 0)
-      idx = nh.findIndex((h) => !h.startsWith("cod") && ALIASES[key].some((a) => h.includes(a)));
-    if (idx < 0) idx = nh.findIndex((h) => ALIASES[key].some((a) => h.includes(a)));
+    const aliases = ALIASES[key];
+    let idx = nh.findIndex((h) => aliases.includes(h));
+    // prefere colunas de nome (nomeContaContabil) em vez de códigos (codContaContabil)
+    if (idx < 0) idx = buscar(aliases, (h) => h.startsWith("nome"));
+    if (idx < 0) idx = buscar(aliases, (h) => !h.startsWith("cod"));
+    if (idx < 0) idx = buscar(aliases, () => true);
     if (idx >= 0) map[key] = idx;
   });
   return map;
 }
+
 
 // ---------------- CSV -----------------
 
