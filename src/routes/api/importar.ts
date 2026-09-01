@@ -44,25 +44,21 @@ export const Route = createFileRoute("/api/importar")({
           );
         }
 
-        const { csvParaMatriz, normalizarMatriz } = await import("@/lib/import-normalize");
+        const { normalizarMatriz } = await import("@/lib/import-normalize");
         const anoPadrao = Number(process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear());
 
         let matriz: (string | number | null | undefined)[][];
         try {
-          if (ext === "csv") {
-            matriz = csvParaMatriz(await file.text());
-          } else {
-            const XLSX = await import("xlsx");
-            const buf = new Uint8Array(await file.arrayBuffer());
-            const wb = XLSX.read(buf, { type: "array" });
-            const sheetName = wb.SheetNames[0];
-            if (!sheetName) throw new Error("Planilha sem abas.");
-            const sheet = wb.Sheets[sheetName]!;
-            matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" }) as (
-              | string
-              | number
-            )[][];
-          }
+          const XLSX = await import("xlsx");
+          const buf = new Uint8Array(await file.arrayBuffer());
+          const wb = XLSX.read(buf, { type: "array" });
+          const sheetName = wb.SheetNames[0];
+          if (!sheetName) throw new Error("Planilha sem abas.");
+          const sheet = wb.Sheets[sheetName]!;
+          matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: "" }) as (
+            | string
+            | number
+          )[][];
         } catch (e) {
           return new Response(
             JSON.stringify({
