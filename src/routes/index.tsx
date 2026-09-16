@@ -26,7 +26,7 @@ import { ContasDonut, ExecucaoDonut, ExecucaoLineChart } from "@/components/dash
 import { VisaoSegmentada } from "@/components/dashboard/segmentado";
 import { ExecucaoPorArea } from "@/components/dashboard/areas";
 import { AtualizarBase } from "@/components/dashboard/atualizar-base";
-import { LancamentosConta } from "@/components/dashboard/lancamentos";
+
 import { AssistenteVirtual } from "@/components/dashboard/assistente";
 import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
@@ -805,7 +805,7 @@ function DashboardInner() {
 
         <VisaoSegmentada />
 
-        <LancamentosConta />
+        
 
 
 
