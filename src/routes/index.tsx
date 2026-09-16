@@ -4,7 +4,6 @@ import { LogOut } from "lucide-react";
 import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
-  ArrowUp,
   Ban,
   CalendarDays,
   CheckCircle2,
@@ -418,7 +417,6 @@ function DashboardInner() {
     setFiltro,
     limparFiltros,
     temFiltro,
-    receita,
     risco: riscoSel,
     setRisco,
   } = useDataset();
