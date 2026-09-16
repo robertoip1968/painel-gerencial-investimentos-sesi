@@ -201,24 +201,6 @@ export const comparativo = [
 // ---------- Respostas rápidas (leitura executiva) ----------
 export const respostasRapidas = [
   {
-    pergunta: "Quanto temos previsto?",
-    resposta: "R$ 52,73 mi",
-    detalhe: "Orçamento aprovado 2026",
-    tone: "brand" as const,
-  },
-  {
-    pergunta: "Quanto já realizamos?",
-    resposta: "R$ 11,70 mi",
-    detalhe: "22,19% do previsto no período apurado",
-    tone: "ok" as const,
-  },
-  {
-    pergunta: "Quanto falta executar?",
-    resposta: "R$ 41,03 mi",
-    detalhe: "77,81% do orçamento nos meses restantes",
-    tone: "warn" as const,
-  },
-  {
     pergunta: "Onde estão os maiores investimentos?",
     resposta: "Construções em Andamento",
     detalhe: "57,5% do orçamento • Sorriso, VG e Rondonópolis",
