@@ -160,7 +160,9 @@ function TabelaCentrosCusto({ cc }: { cc: ReturnType<typeof centrosTop> }) {
   }) => {
     const ativo = ordem.col === col;
     return (
-      <th className={`py-2 font-medium text-${align}`}>
+      <th
+        className={`py-2 font-medium ${align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"}`}
+      >
         <button
           type="button"
           onClick={() => alternar(col)}
