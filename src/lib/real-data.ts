@@ -207,9 +207,6 @@ export function respostasFrom(d: Dataset) {
   const criticoValor = criticos.reduce((a, c) => a + c.previsto, 0);
   const periodo = `${MESES[0]}-${MESES[mb - 1]}`;
   return [
-    { pergunta: "Quanto temos previsto?", resposta: mi(d.previsto), detalhe: `Orçamento ${ANO()} • ${d.linhas.toLocaleString("pt-BR")} lançamentos`, tone: "brand" as const },
-    { pergunta: "Quanto já realizamos?", resposta: mi(d.realizado), detalhe: `${pctFmt(d.realizado, d.previsto)} do previsto (${periodo})`, tone: "ok" as const },
-    { pergunta: "Quanto falta executar?", resposta: mi(saldo), detalhe: `${pctFmt(saldo, d.previsto)} em ${12 - mb} meses restantes`, tone: "warn" as const },
     {
       pergunta: "Onde estão os maiores investimentos?",
       resposta: maiorConta?.nome ?? "—",
