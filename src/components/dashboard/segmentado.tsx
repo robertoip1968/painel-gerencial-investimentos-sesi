@@ -7,6 +7,8 @@ import { MESES, mesBase } from "@/lib/real-data";
 
 type Ordem = "previsto" | "saldo" | "desvio";
 
+type Coluna = "nome" | "previsto" | "realizado" | "execPct" | "desvio" | "saldo";
+
 const pct = (n: number) => `${n.toFixed(1).replace(".", ",")}%`;
 
 function useMounted() {
