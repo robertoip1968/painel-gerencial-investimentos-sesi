@@ -106,6 +106,127 @@ function Panel({
   );
 }
 
+type ColCC = "cc" | "previsto" | "realizado" | "pct" | "saldo" | "situacao";
+
+function TabelaCentrosCusto({ cc }: { cc: ReturnType<typeof centrosTop> }) {
+  const [ordem, setOrdem] = useState<{ col: ColCC; dir: "asc" | "desc" }>({
+    col: "previsto",
+    dir: "desc",
+  });
+
+  const alternar = (col: ColCC) =>
+    setOrdem((o) =>
+      o.col === col
+        ? { col, dir: o.dir === "asc" ? "desc" : "asc" }
+        : { col, dir: col === "cc" ? "asc" : "desc" },
+    );
+
+  const pesoSituacao = { ok: 0, warn: 1, crit: 2 } as const;
+  const valor = (r: (typeof cc.linhas)[number]) => {
+    switch (ordem.col) {
+      case "cc":
+        return r.cc;
+      case "pct":
+        return r.previsto > 0 ? r.realizado / r.previsto : 0;
+      case "situacao":
+        return pesoSituacao[r.situacao];
+      default:
+        return r[ordem.col];
+    }
+  };
+
+  const demais = cc.linhas.filter((r) => r.cc === "Demais centros de custo");
+  const linhas = cc.linhas
+    .filter((r) => r.cc !== "Demais centros de custo")
+    .sort((a, b) => {
+      const va = valor(a);
+      const vb = valor(b);
+      const c =
+        typeof va === "string" && typeof vb === "string"
+          ? va.localeCompare(vb, "pt-BR")
+          : Number(va) - Number(vb);
+      return ordem.dir === "asc" ? c : -c;
+    })
+    .concat(demais);
+
+  const Th = ({
+    col,
+    children,
+    align = "right",
+  }: {
+    col: ColCC;
+    children: React.ReactNode;
+    align?: "left" | "right" | "center";
+  }) => {
+    const ativo = ordem.col === col;
+    return (
+      <th className={`py-2 font-medium text-${align}`}>
+        <button
+          type="button"
+          onClick={() => alternar(col)}
+          aria-label={`Ordenar por ${String(children)}`}
+          className={`inline-flex w-full items-center gap-1 ${
+            align === "right" ? "justify-end" : align === "center" ? "justify-center" : ""
+          } hover:text-brand ${ativo ? "font-semibold text-brand" : ""}`}
+        >
+          {children}
+          <span className="text-[9px] leading-none">
+            {ativo ? (ordem.dir === "asc" ? "▲" : "▼") : "↕"}
+          </span>
+        </button>
+      </th>
+    );
+  };
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-border text-left text-muted-foreground">
+            <th className="w-6 py-2 font-medium"></th>
+            <Th col="cc" align="left">
+              Centro de Custo
+            </Th>
+            <Th col="previsto">Previsto (R$)</Th>
+            <Th col="realizado">Realizado (R$)</Th>
+            <Th col="pct">% Execução</Th>
+            <Th col="saldo">Saldo (R$)</Th>
+            <Th col="situacao" align="center">
+              Situação
+            </Th>
+          </tr>
+        </thead>
+        <tbody>
+          {linhas.map((r, i) => (
+            <tr key={r.cc} className="border-b border-border/60">
+              <td className="py-1.5 text-muted-foreground">{i + 1}</td>
+              <td className="py-1.5">{r.cc}</td>
+              <td className="py-1.5 text-right tabular-nums">{brl(r.previsto)}</td>
+              <td className="py-1.5 text-right tabular-nums">{brl(r.realizado)}</td>
+              <td className="py-1.5 text-right tabular-nums">{r.pct}</td>
+              <td className="py-1.5 text-right tabular-nums">{brl(r.saldo)}</td>
+              <td className="py-1.5">
+                <span className={`mx-auto block size-2.5 rounded-full ${dotClass[r.situacao]}`} />
+              </td>
+            </tr>
+          ))}
+          <tr className="font-semibold text-navy">
+            <td className="py-2"></td>
+            <td className="py-2">TOTAL</td>
+            <td className="py-2 text-right tabular-nums">{brl(cc.total.previsto)}</td>
+            <td className="py-2 text-right tabular-nums">{brl(cc.total.realizado)}</td>
+            <td className="py-2 text-right tabular-nums">{cc.total.pct}</td>
+            <td className="py-2 text-right tabular-nums">{brl(cc.total.saldo)}</td>
+            <td className="py-2">
+              <span className="mx-auto block size-2.5 rounded-full bg-crit" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Filtro({
   label,
   value,
@@ -621,49 +742,7 @@ function DashboardInner() {
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
           <Panel title="Execução por Centro de Custo" hint="(Top 10)" className="xl:col-span-5">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="w-6 py-2 font-medium"></th>
-                    <th className="py-2 font-medium">Centro de Custo</th>
-                    <th className="py-2 text-right font-medium">Previsto (R$)</th>
-                    <th className="py-2 text-right font-medium">Realizado (R$)</th>
-                    <th className="py-2 text-right font-medium">% Execução</th>
-                    <th className="py-2 text-right font-medium">Saldo (R$)</th>
-                    <th className="py-2 text-center font-medium">Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cc.linhas.map((r, i) => (
-                    <tr key={r.cc} className="border-b border-border/60">
-                      <td className="py-1.5 text-muted-foreground">{i + 1}</td>
-                      <td className="py-1.5">{r.cc}</td>
-                      <td className="py-1.5 text-right tabular-nums">{brl(r.previsto)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{brl(r.realizado)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{r.pct}</td>
-                      <td className="py-1.5 text-right tabular-nums">{brl(r.saldo)}</td>
-                      <td className="py-1.5">
-                        <span
-                          className={`mx-auto block size-2.5 rounded-full ${dotClass[r.situacao]}`}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="font-semibold text-navy">
-                    <td className="py-2"></td>
-                    <td className="py-2">TOTAL</td>
-                    <td className="py-2 text-right tabular-nums">{brl(cc.total.previsto)}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(cc.total.realizado)}</td>
-                    <td className="py-2 text-right tabular-nums">{cc.total.pct}</td>
-                    <td className="py-2 text-right tabular-nums">{brl(cc.total.saldo)}</td>
-                    <td className="py-2">
-                      <span className="mx-auto block size-2.5 rounded-full bg-crit" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <TabelaCentrosCusto cc={cc} />
           </Panel>
 
           <Panel title="Top 10 Maiores Saldos a Executar" className="xl:col-span-4">
