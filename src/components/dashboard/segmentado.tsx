@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowDownRight, ArrowUpRight, Layers, ListTree, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpDown, ArrowUpRight, Layers, ListTree, Wallet } from "lucide-react";
 import { brl, type SegRow } from "@/lib/dashboard-data";
 import { useDataset } from "@/lib/dataset-store";
 import { MESES, mesBase } from "@/lib/real-data";
@@ -249,13 +249,33 @@ export function VisaoSegmentada() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="py-2 font-medium">{ativa.colLabel}</th>
-                <th className="py-2 text-right font-medium">Previsto</th>
-
-                <th className="py-2 text-right font-medium">Realizado</th>
-                <th className="py-2 text-right font-medium">% Exec.</th>
-                <th className="py-2 text-right font-medium">Desvio (p.p.)</th>
-                <th className="py-2 text-right font-medium">Saldo</th>
+                {(
+                  [
+                    { col: "nome" as const, label: ativa.colLabel, align: "left" as const },
+                    { col: "previsto" as const, label: "Previsto", align: "right" as const },
+                    { col: "realizado" as const, label: "Realizado", align: "right" as const },
+                    { col: "execPct" as const, label: "% Exec.", align: "right" as const },
+                    { col: "desvio" as const, label: "Desvio (p.p.)", align: "right" as const },
+                    { col: "saldo" as const, label: "Saldo", align: "right" as const },
+                  ] satisfies { col: Coluna; label: string; align: "left" | "right" }[]
+                ).map((c) => (
+                  <th
+                    key={c.col}
+                    className={`py-2 font-medium ${c.align === "right" ? "text-right" : "text-left"}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(c.col)}
+                      title="Ordenar por esta coluna"
+                      className={`inline-flex items-center gap-1 hover:text-navy ${
+                        sort?.col === c.col ? "font-semibold text-navy" : ""
+                      }`}
+                    >
+                      {c.label}
+                      <ArrowUpDown className="size-3 opacity-60" />
+                    </button>
+                  </th>
+                ))}
                 <th className="py-2 text-center font-medium">Sit.</th>
               </tr>
             </thead>
