@@ -134,9 +134,7 @@ function TabelaCentrosCusto({ cc }: { cc: ReturnType<typeof centrosTop> }) {
     }
   };
 
-  const demais = cc.linhas.filter((r) => r.cc === "Demais centros de custo");
   const linhas = cc.linhas
-    .filter((r) => r.cc !== "Demais centros de custo")
     .sort((a, b) => {
       const va = valor(a);
       const vb = valor(b);
@@ -145,8 +143,7 @@ function TabelaCentrosCusto({ cc }: { cc: ReturnType<typeof centrosTop> }) {
           ? va.localeCompare(vb, "pt-BR")
           : Number(va) - Number(vb);
       return ordem.dir === "asc" ? c : -c;
-    })
-    .concat(demais);
+    });
 
   const Th = ({
     col,
