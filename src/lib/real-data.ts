@@ -119,7 +119,7 @@ export function situacaoDe(pct: number, meta: number): "ok" | "warn" | "crit" {
   return "crit";
 }
 
-export function centrosTop(d: Dataset, n = 9): { linhas: LinhaCC[]; total: LinhaCC } {
+export function centrosTop(d: Dataset, n = 10): { linhas: LinhaCC[]; total: LinhaCC } {
   const meta = (mesBase(d) / 12) * 100;
   const list = [...d.segCentroCusto].sort((a, b) => b.previsto - a.previsto);
   const mk = (nome: string, previsto: number, realizado: number): LinhaCC => {
@@ -134,8 +134,6 @@ export function centrosTop(d: Dataset, n = 9): { linhas: LinhaCC[]; total: Linha
     };
   };
   const linhas = list.slice(0, n).map((c) => mk(c.nome, c.previsto, c.realizado));
-  const resto = list.slice(n).reduce((a, c) => ({ p: a.p + c.previsto, r: a.r + c.realizado }), { p: 0, r: 0 });
-  if (resto.p > 0) linhas.push(mk("Demais centros de custo", resto.p, resto.r));
   return { linhas, total: mk("TOTAL", d.previsto, d.realizado) };
 }
 
