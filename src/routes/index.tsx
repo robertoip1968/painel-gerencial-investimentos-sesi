@@ -4,7 +4,6 @@ import { LogOut } from "lucide-react";
 import { getSessao, sair } from "@/lib/auth-local";
 import {
   AlertTriangle,
-  ArrowUp,
   Ban,
   CalendarDays,
   CheckCircle2,
@@ -418,7 +417,6 @@ function DashboardInner() {
     setFiltro,
     limparFiltros,
     temFiltro,
-    receita,
     risco: riscoSel,
     setRisco,
   } = useDataset();
@@ -810,7 +808,7 @@ function DashboardInner() {
 
 
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <Panel title="Destaques e Alertas">
             <ul className="space-y-2.5 text-xs">
               <li className="flex gap-2">
@@ -838,45 +836,6 @@ function DashboardInner() {
             </ul>
           </Panel>
 
-          <Panel title={`Receita x Despesa – ${ANO()}`}>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="py-2 text-left font-medium"></th>
-                  <th className="py-2 text-right font-medium">Previsto</th>
-                  <th className="py-2 text-right font-medium">Realizado</th>
-                  <th className="py-2 text-right font-medium">% Exec.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { linha: "Receita", p: receita.previsto, r: receita.realizado },
-                  { linha: "Despesa", p: dataset.previsto, r: dataset.realizado },
-                  {
-                    linha: "Resultado",
-                    p: receita.previsto - dataset.previsto,
-                    r: receita.realizado - dataset.realizado,
-                  },
-                ].map((c) => (
-                  <tr key={c.linha} className="border-b border-border/60">
-                    <td className="py-2">{c.linha}</td>
-                    <td className="py-2 text-right tabular-nums">{mi(c.p)}</td>
-                    <td className="py-2 text-right tabular-nums">{mi(c.r)}</td>
-                    <td className="py-2 text-right tabular-nums">
-                      <span className="inline-flex items-center gap-1">
-                        {pctFmt(c.r, c.p)}
-                        {c.r >= 0 ? (
-                          <ArrowUp className="size-3.5 text-ok" />
-                        ) : (
-                          <MinusCircle className="size-3.5 text-crit" />
-                        )}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Panel>
 
           <Panel title="Informações Gerais">
             <div className="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
