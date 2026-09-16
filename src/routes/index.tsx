@@ -743,43 +743,11 @@ function DashboardInner() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Panel title="Execução por Centro de Custo" hint="(Top 10)" className="xl:col-span-5">
+          <Panel title="Execução por Centro de Custo" hint="(Top 10)" className="xl:col-span-7">
             <TabelaCentrosCusto cc={cc} />
           </Panel>
 
-          <Panel title="Top 10 Maiores Saldos a Executar" className="xl:col-span-4">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="py-2 font-medium">Item / Investimento</th>
-                    <th className="py-2 font-medium">Centro de Custo</th>
-                    <th className="py-2 text-right font-medium">Saldo (R$)</th>
-                    <th className="py-2 text-right font-medium">% do Saldo Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {saldos.map((r) => (
-                    <tr key={r.item} className="border-b border-border/60">
-                      <td className="py-1.5">{r.item}</td>
-                      <td className="py-1.5 text-muted-foreground">{r.cc}</td>
-                      <td className="py-1.5 text-right tabular-nums">{brl(r.saldo)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{r.pct}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-semibold text-navy">
-                    <td className="py-2" colSpan={2}>
-                      TOTAL TOP 10
-                    </td>
-                    <td className="py-2 text-right tabular-nums">{brl(saldoTop)}</td>
-                    <td className="py-2 text-right tabular-nums">{pctFmt(saldoTop, dataset.previsto - dataset.realizado)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
-          <Panel title="Análise de Risco da Execução" className="xl:col-span-3">
+          <Panel title="Análise de Risco da Execução" className="xl:col-span-5">
             <div className="grid grid-cols-2 gap-3">
               {risco.map((r) => {
                 const tone = {
