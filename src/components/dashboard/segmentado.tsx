@@ -53,6 +53,13 @@ export function VisaoSegmentada() {
   const [dim, setDim] = useState<"cc" | "item" | "conta">("cc");
   const [ordem, setOrdem] = useState<Ordem>("previsto");
   const [busca, setBusca] = useState("");
+  const [sort, setSort] = useState<{ col: Coluna; dir: "asc" | "desc" } | null>(null);
+  const toggleSort = (col: Coluna) =>
+    setSort((s) =>
+      s?.col === col
+        ? { col, dir: s.dir === "desc" ? "asc" : "desc" }
+        : { col, dir: col === "nome" ? "asc" : "desc" },
+    );
   const mb = mesBase(dataset);
   const META_EXEC_PCT = Math.round((mb / 12) * 100);
 
@@ -99,10 +106,18 @@ export function VisaoSegmentada() {
             ? r.previsto > 0 && r.realizado === 0
             : r.situacao === risco,
       );
+    if (sort) {
+      const f = sort.dir === "asc" ? 1 : -1;
+      return [...d].sort((a, b) =>
+        sort.col === "nome"
+          ? f * a.nome.localeCompare(b.nome, "pt-BR")
+          : f * ((a[sort.col] as number) - (b[sort.col] as number)),
+      );
+    }
     return [...d].sort((a, b) =>
       ordem === "previsto" ? b.previsto - a.previsto : ordem === "saldo" ? b.saldo - a.saldo : a.desvio - b.desvio,
     );
-  }, [ativa, ordem, busca, META_EXEC_PCT, risco]);
+  }, [ativa, ordem, busca, META_EXEC_PCT, risco, sort]);
 
   const visiveis = rows.slice(0, 25);
 
