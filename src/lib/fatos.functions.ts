@@ -60,8 +60,7 @@ export const carregarFatos = createServerFn({ method: "GET" })
       ano,
       mesFechado: mesFechadoPara(ano, anoPadrao, mesFechadoPadrao),
       producao,
-      anosDisponiveis:
-        anosDisponiveis.length > 0 ? anosDisponiveis : anoValido(ano) ? [ano] : [],
+      anosDisponiveis: anosDisponiveis.length > 0 ? anosDisponiveis : anoValido(ano) ? [ano] : [],
     };
 
     const r = await carregarFatosParaPainel(ano);

@@ -137,7 +137,6 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void carregarAno();
     // carga inicial: o servidor decide o exercício padrão
-     
   }, [carregarAno]);
 
   const aplicarLocais = useCallback((p: FatosPayload) => {
@@ -178,7 +177,22 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       anosDisponiveis,
       setAnoSelecionado,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte, anoSelecionado, anosDisponiveis, setAnoSelecionado]);
+  }, [
+    upload,
+    filtros,
+    setFiltro,
+    limparFiltros,
+    risco,
+    versao,
+    recarregar,
+    aplicarLocais,
+    carregando,
+    erroDados,
+    fonte,
+    anoSelecionado,
+    anosDisponiveis,
+    setAnoSelecionado,
+  ]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
