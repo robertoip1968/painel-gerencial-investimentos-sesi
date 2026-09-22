@@ -84,38 +84,32 @@ export function AtualizarBase() {
             </span>
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Envie a planilha SHIFT em Excel (.xlsx, até 50 MB) com Origem, Cód. Empresa, Ano, Mês, Centro
-            de Custo, Item Contábil, Conta Contábil, Previsto e Realizado. A carga é tudo-ou-nada:
-            qualquer linha inválida cancela a importação e a base anterior é mantida.
+            Os dados são buscados diretamente da consulta pública do Metabase (Origem, Cód.
+            Empresa, Ano, Mês, Centro de Custo, Item Contábil, Conta Contábil, Previsto e
+            Realizado). A carga é tudo-ou-nada: qualquer registro inválido cancela a atualização e
+            a base anterior é mantida.
           </p>
           {modoLocal ? (
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Modo pré-visualização: a planilha é lida apenas no navegador, sem gravar no
+              Modo pré-visualização: os dados são lidos apenas no navegador, sem gravar no
               PostgreSQL. Ao recarregar a página os dados voltam ao conjunto de demonstração.
             </p>
           ) : null}
 
         </div>
         <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".xlsx"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void enviar(f);
-              e.target.value = "";
-            }}
-          />
           <button
             type="button"
             disabled={enviando}
-            onClick={() => inputRef.current?.click()}
+            onClick={() => void atualizar()}
             className="flex items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-60"
           >
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-            {enviando ? "Importando…" : "Atualizar base de dados"}
+            {enviando ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            {enviando ? "Atualizando…" : "Atualizar base de dados"}
           </button>
         </div>
       </div>
