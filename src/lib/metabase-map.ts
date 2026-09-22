@@ -36,6 +36,7 @@ export const COLUNAS_METABASE = [
   "Conta_Nivel1",
   "CodCentroCusto",
   "CentroCusto",
+  "CodItem_Nivel4",
   "CodItem_Nivel5",
   "CodItem",
   "ItemContabil",
@@ -99,22 +100,34 @@ export function origemDeContaNivel1(valor: unknown): "DESPESA" | "RECEITA" | nul
 }
 
 /**
- * codItemContabil = CodItem_Nivel5 + os 2 últimos dígitos de CodItem.
+ * codItemContabil = nível 5 + os 2 últimos dígitos de CodItem.
  * Ex.: 26306100101 + 30610010103 -> 2630610010103.
- * Devolve null quando algum dos campos estiver vazio ou malformado.
+ *
+ * Quando CodItem_Nivel5 vier vazio, o nível 5 é derivado de forma determinística:
+ * nivel5 = CodItem_Nivel4 + CodItem.slice(-4, -2) — ou seja, o código final
+ * equivale a CodItem_Nivel4 + os últimos 4 dígitos de CodItem.
+ * Ex.: 253041201 + 30412010201 -> 2530412010201 (não confundir com o ramo 263).
+ *
+ * Devolve null quando não for possível derivar com segurança.
  */
-export function derivarCodItem(nivel5: unknown, codItem: unknown): string | null {
-  const base = normalizarCodigo(nivel5 as string | number).trim();
+export function derivarCodItem(nivel5: unknown, codItem: unknown, nivel4?: unknown): string | null {
   const filho = normalizarCodigo(codItem as string | number).trim();
+  if (!/^\d{4,}$/.test(filho)) return null;
+
+  let base = normalizarCodigo(nivel5 as string | number).trim();
+  if (!base) {
+    const b4 = normalizarCodigo(nivel4 as string | number).trim();
+    if (!/^\d+$/.test(b4)) return null;
+    base = b4 + filho.slice(-4, -2);
+  }
   if (!/^\d+$/.test(base)) return null;
-  if (!/^\d{2,}$/.test(filho)) return null;
   return base + filho.slice(-2);
 }
 
 /** Converte a resposta do Metabase em lançamentos prontos para o banco. */
 export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
   const col = mapearColunasMetabase(rows);
-  const linhas: LinhaNormalizada[] = [];
+  const validas: Valida[] = [];
   const rejeitadas: Rejeitada[] = [];
   const anos = new Set<number>();
 
@@ -164,13 +177,18 @@ export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
       return;
     }
 
-    const codItem = derivarCodItem(r?.[col.CodItem_Nivel5], r?.[col.CodItem]);
+    const codItem = derivarCodItem(
+      r?.[col.CodItem_Nivel5],
+      r?.[col.CodItem],
+      r?.[col.CodItem_Nivel4],
+    );
     if (!codItem) {
       rejeitadas.push({
         linha: numero,
         motivo:
           `Não foi possível derivar o código do item contábil ` +
-          `(CodItem_Nivel5="${txt(r, "CodItem_Nivel5")}", CodItem="${txt(r, "CodItem")}")`,
+          `(CodItem_Nivel5="${txt(r, "CodItem_Nivel5")}", CodItem_Nivel4="${txt(r, "CodItem_Nivel4")}", ` +
+          `CodItem="${txt(r, "CodItem")}")`,
       });
       return;
     }
@@ -194,21 +212,95 @@ export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
     }
 
     anos.add(ano);
-    linhas.push({
-      origem,
-      codEmpresa: codEmpresa || "02MT",
-      ano,
-      mes,
-      codCentroCusto,
-      centroCusto,
-      codItem,
-      item: txt(r, "ItemContabil") || codItem,
-      codConta,
-      conta: txt(r, "Conta") || codConta || "Não informado",
-      previsto,
-      realizado,
+    validas.push({
+      linha: numero,
+      dados: {
+        origem,
+        codEmpresa: codEmpresa || "02MT",
+        ano,
+        mes,
+        codCentroCusto,
+        centroCusto,
+        codItem,
+        item: txt(r, "ItemContabil") || codItem,
+        codConta,
+        conta: txt(r, "Conta") || codConta || "Não informado",
+        previsto,
+        realizado,
+      },
+      nomes: {
+        centroCusto: txt(r, "CentroCusto"),
+        item: txt(r, "ItemContabil"),
+        conta: txt(r, "Conta"),
+      },
     });
   });
 
+  const { linhas, conflitos } = consolidarPorChaveOficial(validas);
+  rejeitadas.push(...conflitos);
+
   return { linhas, rejeitadas, total: rows.length, anos: [...anos].sort() };
+}
+
+type Valida = {
+  linha: number;
+  dados: LinhaNormalizada;
+  nomes: { centroCusto: string; item: string; conta: string };
+};
+
+/** Chave oficial do grão do painel (o banco não guarda função-programa). */
+export function chaveOficial(l: LinhaNormalizada): string {
+  return [l.origem, l.codEmpresa, l.ano, l.mes, l.codCentroCusto, l.codItem, l.codConta].join("|");
+}
+
+const iguais = (a: string, b: string) => chave(a) === chave(b);
+
+/**
+ * Consolida desdobramentos (ex.: por função-programa) que compartilham a chave
+ * oficial, somando previsto/realizado. Nomes divergentes na mesma chave não são
+ * silenciados: viram conflito e impedem a importação.
+ */
+function consolidarPorChaveOficial(validas: Valida[]): {
+  linhas: LinhaNormalizada[];
+  conflitos: Rejeitada[];
+} {
+  const mapa = new Map<
+    string,
+    { linha: number; dados: LinhaNormalizada; nomes: Valida["nomes"] }
+  >();
+  const conflitos: Rejeitada[] = [];
+
+  for (const v of validas) {
+    const k = chaveOficial(v.dados);
+    const atual = mapa.get(k);
+    if (!atual) {
+      mapa.set(k, { linha: v.linha, dados: { ...v.dados }, nomes: { ...v.nomes } });
+      continue;
+    }
+
+    const campos: Array<keyof Valida["nomes"]> = ["centroCusto", "item", "conta"];
+    let conflito = false;
+    for (const campo of campos) {
+      const a = atual.nomes[campo];
+      const b = v.nomes[campo];
+      if (a && b && !iguais(a, b)) {
+        conflitos.push({
+          linha: v.linha,
+          motivo:
+            `Conflito de descrição em "${campo}" para a mesma chave oficial ` +
+            `(linha ${atual.linha}: "${a}" x linha ${v.linha}: "${b}").`,
+        });
+        conflito = true;
+      } else if (!a && b) {
+        atual.nomes[campo] = b;
+        atual.dados[campo] = v.dados[campo];
+      }
+    }
+    if (conflito) continue;
+
+    atual.dados.previsto += v.dados.previsto;
+    atual.dados.realizado += v.dados.realizado;
+  }
+
+  return { linhas: [...mapa.values()].map((v) => v.dados), conflitos };
 }
