@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, Database, Loader2, Upload } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw } from "lucide-react";
 import { useDataset } from "@/lib/dataset-store";
 
 type Resultado = {
