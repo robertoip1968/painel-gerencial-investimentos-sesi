@@ -74,6 +74,21 @@ const SQL_FATOS = `
   WHERE ano = $1
 `;
 
+/** Exercícios realmente existentes na base, do mais recente ao mais antigo. */
+export async function anosDisponiveisDoBanco(): Promise<number[]> {
+  const p = getPool();
+  if (!p) return [];
+  try {
+    const res = await p.query(
+      `SELECT DISTINCT ano::int AS ano FROM dash_sesi.vw_fatos ORDER BY ano DESC`,
+    );
+    return res.rows.map((r: { ano: number }) => Number(r.ano)).filter((a) => Number.isFinite(a));
+  } catch (e) {
+    console.error("Falha ao listar exercícios disponíveis:", e);
+    return [];
+  }
+}
+
 /** Lê a visão agregada dash_sesi.vw_fatos. */
 export async function lerFatosDoBanco(ano: number): Promise<LinhaFato[] | null> {
   const p = getPool();
