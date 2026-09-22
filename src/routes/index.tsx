@@ -416,6 +416,9 @@ function DashboardInner() {
     temFiltro,
     risco: riscoSel,
     setRisco,
+    anoSelecionado,
+    anosDisponiveis,
+    setAnoSelecionado,
   } = useDataset();
   const [filtrosAbertos, setFiltrosAbertos] = useState(true);
   const kpis = kpisFromDataset(dataset);
@@ -518,7 +521,15 @@ function DashboardInner() {
             temFiltro ? "border-brand ring-1 ring-brand/30" : "border-border"
           }`}
         >
-          <Filtro label="Ano" value={String(ANO())} options={[{ value: String(ANO()), label: String(ANO()) }]} />
+          <Filtro
+            label="Ano"
+            value={String(anoSelecionado)}
+            {...(anosDisponiveis.length > 1 ? { onChange: (v: string) => setAnoSelecionado(Number(v)) } : {})}
+            options={(anosDisponiveis.length ? anosDisponiveis : [anoSelecionado]).map((a) => ({
+              value: String(a),
+              label: String(a),
+            }))}
+          />
           <Filtro
             label="Mês inicial"
             value={String(filtros.mesIni)}
