@@ -105,7 +105,7 @@ export async function importarLocalmente(): Promise<ResultadoLocal> {
     payload: {
       ano,
       empresa,
-      fileName: `${file.name} — leitura local (sem banco)`,
+      fileName: `${FONTE} — leitura local (sem banco)`,
       cc,
       item,
       conta,
