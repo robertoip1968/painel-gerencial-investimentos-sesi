@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw } from "lucide-react";
+import { useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw, Upload } from "lucide-react";
 import { useDataset } from "@/lib/dataset-store";
 
 type Resultado = {
@@ -20,17 +20,22 @@ export function AtualizarBase() {
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<string[]>([]);
   const [resultado, setResultado] = useState<Resultado | null>(null);
+  const inputArquivo = useRef<HTMLInputElement>(null);
   const semBanco = /DATABASE_URL|não configurado|conex/i.test(erro ?? "");
 
-  async function atualizar() {
+  async function atualizar(arquivo?: File) {
     setErro(null);
     setDetalhes([]);
     setResultado(null);
     setEnviando(true);
     try {
+      if (arquivo && arquivo.size > 50 * 1024 * 1024) {
+        setErro("Arquivo acima do limite de 50 MB.");
+        return;
+      }
       if (modoLocal) {
         const { importarLocalmente } = await import("@/lib/import-local");
-        const r = await importarLocalmente();
+        const r = await importarLocalmente(arquivo);
         if (r.rejeitadas.length > 0) {
           setErro(
             `Importação cancelada: ${r.rejeitadas.length} de ${r.total} registro(s) não passaram na validação.`,
@@ -41,18 +46,27 @@ export function AtualizarBase() {
         aplicarLocais(r.payload);
         setResultado({
           ok: true,
-          arquivo: "Metabase (consulta pública)",
+          arquivo: arquivo ? `Planilha de contingência — ${arquivo.name}` : "Consulta oficial",
           linhasEncontradas: r.total,
           linhasImportadas: r.importadas,
           linhasRejeitadas: 0,
           dataHora: new Date().toISOString(),
         });
+        if (r.anos.length > 1) {
+          setDetalhes([
+            `Exercícios recebidos: ${r.anos.join(", ")}. Exibindo ${r.anoExibido} (empresa ${r.empresaExibida}).`,
+          ]);
+        }
         return;
       }
-      const r = await fetch("/api/importar", {
-        method: "POST",
-        credentials: "same-origin",
-      });
+      let r: Response;
+      if (arquivo) {
+        const fd = new FormData();
+        fd.append("arquivo", arquivo);
+        r = await fetch("/api/importar", { method: "POST", body: fd, credentials: "same-origin" });
+      } else {
+        r = await fetch("/api/importar", { method: "POST", credentials: "same-origin" });
+      }
       const j = (await r.json().catch(() => ({}))) as Resultado & { error?: string };
       if (!r.ok || !j.ok) {
         setErro(j.error ?? j.erro ?? "Não foi possível concluir a importação.");
@@ -66,6 +80,7 @@ export function AtualizarBase() {
       setErro("Falha de comunicação com o servidor.");
     } finally {
       setEnviando(false);
+      if (inputArquivo.current) inputArquivo.current.value = "";
     }
   }
 
@@ -84,10 +99,13 @@ export function AtualizarBase() {
             </span>
           </h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Os dados são buscados diretamente da consulta pública do Metabase (Origem, Cód.
-            Empresa, Ano, Mês, Centro de Custo, Item Contábil, Conta Contábil, Previsto e
-            Realizado). A carga é tudo-ou-nada: qualquer registro inválido cancela a atualização e
-            a base anterior é mantida.
+            Fonte oficial: consulta corporativa de investimentos (Origem, Empresa, Ano, Mês, Centro
+            de Custo, Item Contábil, Conta Contábil, Previsto e Realizado). A carga é tudo-ou-nada:
+            qualquer registro inválido cancela a atualização e a base anterior é mantida.
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Contingência: se a consulta oficial estiver indisponível, é possível importar uma
+            planilha .xlsx de até 50 MB no mesmo formato.
           </p>
           {modoLocal ? (
             <p className="mt-1 text-[11px] text-muted-foreground">
@@ -98,6 +116,26 @@ export function AtualizarBase() {
 
         </div>
         <div className="flex items-center gap-2">
+          <input
+            ref={inputArquivo}
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void atualizar(f);
+            }}
+          />
+          <button
+            type="button"
+            disabled={enviando}
+            onClick={() => inputArquivo.current?.click()}
+            title="Importar planilha .xlsx (contingência)"
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-60"
+          >
+            <Upload className="size-4" />
+            Contingência (.xlsx)
+          </button>
           <button
             type="button"
             disabled={enviando}
@@ -113,6 +151,7 @@ export function AtualizarBase() {
           </button>
         </div>
       </div>
+
 
       {resultado ? (
         <div className="mt-3 rounded-md border border-ok/40 bg-ok/10 p-3 text-[12px] text-foreground">
