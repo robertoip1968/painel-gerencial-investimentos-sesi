@@ -66,6 +66,9 @@ const DatasetContext = createContext<Ctx>({
   carregando: false,
   erroDados: null,
   fonte: "local",
+  anoSelecionado: anoExercicio(),
+  anosDisponiveis: [],
+  setAnoSelecionado: () => {},
 });
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
