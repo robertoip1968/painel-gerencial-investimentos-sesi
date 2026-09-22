@@ -182,13 +182,18 @@ export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
       return;
     }
 
-    const codItem = derivarCodItem(r?.[col.CodItem_Nivel5], r?.[col.CodItem]);
+    const codItem = derivarCodItem(
+      r?.[col.CodItem_Nivel5],
+      r?.[col.CodItem],
+      r?.[col.CodItem_Nivel4],
+    );
     if (!codItem) {
       rejeitadas.push({
         linha: numero,
         motivo:
           `Não foi possível derivar o código do item contábil ` +
-          `(CodItem_Nivel5="${txt(r, "CodItem_Nivel5")}", CodItem="${txt(r, "CodItem")}")`,
+          `(CodItem_Nivel5="${txt(r, "CodItem_Nivel5")}", CodItem_Nivel4="${txt(r, "CodItem_Nivel4")}", ` +
+          `CodItem="${txt(r, "CodItem")}")`,
       });
       return;
     }
@@ -212,21 +217,93 @@ export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
     }
 
     anos.add(ano);
-    linhas.push({
-      origem,
-      codEmpresa: codEmpresa || "02MT",
-      ano,
-      mes,
-      codCentroCusto,
-      centroCusto,
-      codItem,
-      item: txt(r, "ItemContabil") || codItem,
-      codConta,
-      conta: txt(r, "Conta") || codConta || "Não informado",
-      previsto,
-      realizado,
+    validas.push({
+      linha: numero,
+      dados: {
+        origem,
+        codEmpresa: codEmpresa || "02MT",
+        ano,
+        mes,
+        codCentroCusto,
+        centroCusto,
+        codItem,
+        item: txt(r, "ItemContabil") || codItem,
+        codConta,
+        conta: txt(r, "Conta") || codConta || "Não informado",
+        previsto,
+        realizado,
+      },
+      nomes: {
+        centroCusto: txt(r, "CentroCusto"),
+        item: txt(r, "ItemContabil"),
+        conta: txt(r, "Conta"),
+      },
     });
   });
 
+  const { linhas, conflitos } = consolidarPorChaveOficial(validas);
+  rejeitadas.push(...conflitos);
+
   return { linhas, rejeitadas, total: rows.length, anos: [...anos].sort() };
 }
+
+type Valida = {
+  linha: number;
+  dados: LinhaNormalizada;
+  nomes: { centroCusto: string; item: string; conta: string };
+};
+
+/** Chave oficial do grão do painel (o banco não guarda função-programa). */
+export function chaveOficial(l: LinhaNormalizada): string {
+  return [l.origem, l.codEmpresa, l.ano, l.mes, l.codCentroCusto, l.codItem, l.codConta].join("|");
+}
+
+const iguais = (a: string, b: string) => chave(a) === chave(b);
+
+/**
+ * Consolida desdobramentos (ex.: por função-programa) que compartilham a chave
+ * oficial, somando previsto/realizado. Nomes divergentes na mesma chave não são
+ * silenciados: viram conflito e impedem a importação.
+ */
+function consolidarPorChaveOficial(validas: Valida[]): {
+  linhas: LinhaNormalizada[];
+  conflitos: Rejeitada[];
+} {
+  const mapa = new Map<string, { linha: number; dados: LinhaNormalizada; nomes: Valida["nomes"] }>();
+  const conflitos: Rejeitada[] = [];
+
+  for (const v of validas) {
+    const k = chaveOficial(v.dados);
+    const atual = mapa.get(k);
+    if (!atual) {
+      mapa.set(k, { linha: v.linha, dados: { ...v.dados }, nomes: { ...v.nomes } });
+      continue;
+    }
+
+    const campos: Array<keyof Valida["nomes"]> = ["centroCusto", "item", "conta"];
+    let conflito = false;
+    for (const campo of campos) {
+      const a = atual.nomes[campo];
+      const b = v.nomes[campo];
+      if (a && b && !iguais(a, b)) {
+        conflitos.push({
+          linha: v.linha,
+          motivo:
+            `Conflito de descrição em "${campo}" para a mesma chave oficial ` +
+            `(linha ${atual.linha}: "${a}" x linha ${v.linha}: "${b}").`,
+        });
+        conflito = true;
+      } else if (!a && b) {
+        atual.nomes[campo] = b;
+        atual.dados[campo] = v.dados[campo];
+      }
+    }
+    if (conflito) continue;
+
+    atual.dados.previsto += v.dados.previsto;
+    atual.dados.realizado += v.dados.realizado;
+  }
+
+  return { linhas: [...mapa.values()].map((v) => v.dados), conflitos };
+}
+
