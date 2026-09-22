@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { derivarCodItem, metabaseParaLinhas, origemDeContaNivel1 } from "@/lib/metabase-map";
+import {
+  chaveOficial,
+  derivarCodItem,
+  metabaseParaLinhas,
+  origemDeContaNivel1,
+} from "@/lib/metabase-map";
 
 const base = {
   CodEmpresa: "02MT",
