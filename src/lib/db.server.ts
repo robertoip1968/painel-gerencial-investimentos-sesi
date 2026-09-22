@@ -233,11 +233,13 @@ export async function importarLancamentos(params: {
   try {
     client = await p.connect();
 
+    // 1 exercício => grava o ano; carga multi-ano => NULL (sem mudar o schema).
+    const anoRegistro = anos.length === 1 ? (anos[0] ?? null) : null;
     const reg = await client.query(
       `INSERT INTO dash_sesi.importacoes
          (nome_arquivo, usuario, ano, quantidade_linhas, quantidade_rejeitada, status)
        VALUES ($1, $2, $3, $4, $5, 'PENDENTE') RETURNING id`,
-      [params.arquivo, params.usuario, anos[0] ?? null, params.totalLidas, params.rejeitadas.length],
+      [params.arquivo, params.usuario, anoRegistro, params.totalLidas, params.rejeitadas.length],
     );
     importacaoId = Number(reg.rows[0].id);
 
