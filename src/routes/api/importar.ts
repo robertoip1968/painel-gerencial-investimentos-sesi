@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const json = { "Content-Type": "application/json" };
+const MAX_BYTES = 50 * 1024 * 1024; // contingência: planilha de até 50 MB
 
 export const Route = createFileRoute("/api/importar")({
   server: {
@@ -10,37 +11,104 @@ export const Route = createFileRoute("/api/importar")({
         const sessao = sessaoDaRequisicao(request);
         if (!sessao) return respostaNaoAutorizado();
 
-        const { buscarLinhasMetabase, urlMetabase } = await import("@/lib/metabase.server");
-        const { jsonParaMatriz } = await import("@/lib/metabase");
-        const { normalizarMatriz } = await import("@/lib/import-normalize");
-        const anoPadrao = Number(process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear());
-        const origemNome = urlMetabase();
+        const tipo = request.headers.get("content-type") ?? "";
+        const contingencia = tipo.includes("multipart/form-data");
 
-        let matriz: (string | number | null | undefined)[][];
-        try {
-          matriz = jsonParaMatriz(await buscarLinhasMetabase());
-        } catch (e) {
-          return new Response(
-            JSON.stringify({
-              error: e instanceof Error ? e.message : "Não foi possível ler os dados do Metabase.",
-            }),
-            { status: 502, headers: json },
+        let origemNome: string;
+        let normalizado: {
+          linhas: import("@/lib/import-normalize").LinhaNormalizada[];
+          rejeitadas: { linha: number; motivo: string }[];
+          total: number;
+        };
+
+        if (contingencia) {
+          // ---- Fonte de contingência: planilha .xlsx enviada pelo usuário ----
+          let arquivo: File | null = null;
+          try {
+            const form = await request.formData();
+            const f = form.get("arquivo");
+            if (f instanceof File) arquivo = f;
+          } catch {
+            arquivo = null;
+          }
+          if (!arquivo) {
+            return new Response(JSON.stringify({ error: "Nenhum arquivo enviado." }), {
+              status: 400,
+              headers: json,
+            });
+          }
+          if (!/\.xlsx$/i.test(arquivo.name)) {
+            return new Response(
+              JSON.stringify({ error: "Formato inválido: envie um arquivo .xlsx." }),
+              { status: 400, headers: json },
+            );
+          }
+          if (arquivo.size > MAX_BYTES) {
+            return new Response(
+              JSON.stringify({ error: "Arquivo acima do limite de 50 MB." }),
+              { status: 413, headers: json },
+            );
+          }
+
+          const XLSX = await import("xlsx");
+          const { normalizarMatriz } = await import("@/lib/import-normalize");
+          const anoPadrao = Number(
+            process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear(),
           );
+          origemNome = `Planilha (contingência) — ${arquivo.name}`;
+          try {
+            const wb = XLSX.read(new Uint8Array(await arquivo.arrayBuffer()), { type: "array" });
+            const nome = wb.SheetNames[0];
+            const aba = nome ? wb.Sheets[nome] : undefined;
+            if (!aba) throw new Error("Planilha sem abas de dados.");
+            const matriz = XLSX.utils.sheet_to_json<(string | number | null)[]>(aba, {
+              header: 1,
+              raw: true,
+              defval: "",
+            });
+            normalizado = normalizarMatriz(matriz, { anoPadrao });
+          } catch (e) {
+            return new Response(
+              JSON.stringify({
+                error: e instanceof Error ? e.message : "Não foi possível ler a planilha.",
+              }),
+              { status: 422, headers: json },
+            );
+          }
+        } else {
+          // ---- Fonte oficial: consulta pública do Metabase ----
+          const { buscarLinhasMetabase } = await import("@/lib/metabase.server");
+          const { metabaseParaLinhas } = await import("@/lib/metabase-map");
+          origemNome = "Metabase (consulta oficial)";
+
+          let linhas;
+          try {
+            linhas = await buscarLinhasMetabase();
+          } catch (e) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  e instanceof Error
+                    ? e.message
+                    : "Não foi possível ler os dados da consulta oficial.",
+              }),
+              { status: 502, headers: json },
+            );
+          }
+
+          try {
+            normalizado = metabaseParaLinhas(linhas);
+          } catch (e) {
+            return new Response(
+              JSON.stringify({
+                error: e instanceof Error ? e.message : "Dados fora do layout esperado.",
+              }),
+              { status: 422, headers: json },
+            );
+          }
         }
 
-        let normalizado;
-        try {
-          normalizado = normalizarMatriz(matriz, { anoPadrao });
-        } catch (e) {
-          return new Response(
-            JSON.stringify({
-              error: e instanceof Error ? e.message : "Dados fora do layout esperado.",
-            }),
-            { status: 422, headers: json },
-          );
-        }
-
-        // Tudo ou nada: qualquer linha inválida cancela a importação inteira.
+        // Tudo ou nada: qualquer registro inválido cancela a importação inteira.
         if (normalizado.rejeitadas.length > 0) {
           return new Response(
             JSON.stringify({
