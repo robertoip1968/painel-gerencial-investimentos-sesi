@@ -7,11 +7,6 @@ export function urlMetabase(): string {
 
 const tlsInseguro = () => process.env["METABASE_TLS_INSECURE"] === "true";
 
-/**
- * Busca com validação TLS padrão. Quando (e somente quando) METABASE_TLS_INSECURE=true,
- * a exceção de certificado vale apenas para ESTA requisição, via agente HTTPS dedicado.
- * Nenhuma outra conexão do processo é afetada (nada de NODE_TLS_REJECT_UNAUTHORIZED).
- */
 const MAX_REDIRECTS = 5;
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 
