@@ -132,7 +132,7 @@ export function derivarCodItem(
 /** Converte a resposta do Metabase em lançamentos prontos para o banco. */
 export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
   const col = mapearColunasMetabase(rows);
-  const linhas: LinhaNormalizada[] = [];
+  const validas: Valida[] = [];
   const rejeitadas: Rejeitada[] = [];
   const anos = new Set<number>();
 
