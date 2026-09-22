@@ -1,10 +1,11 @@
 /**
- * Modo de desenvolvimento/pré-visualização: lê a planilha SHIFT (.xlsx)
- * inteiramente no navegador e monta o payload de fatos em memória.
+ * Modo de desenvolvimento/pré-visualização: lê os dados do Metabase pelo
+ * proxy /api/metabase e monta o payload de fatos em memória.
  * Nada é gravado no PostgreSQL — serve apenas para conferir os dados aqui.
  */
 import type { FatosPayload } from "@/lib/facts";
 import { normalizarMatriz } from "@/lib/import-normalize";
+import { jsonParaMatriz, type LinhaMetabase } from "@/lib/metabase";
 import { anoExercicio } from "@/lib/exercicio";
 
 type Bloco = FatosPayload["despesa"];
@@ -39,21 +40,24 @@ export type ResultadoLocal = {
   rejeitadas: { linha: number; motivo: string }[];
 };
 
-export async function importarLocalmente(file: File): Promise<ResultadoLocal> {
-  const XLSX = await import("xlsx");
-  const wb = XLSX.read(new Uint8Array(await file.arrayBuffer()), { type: "array" });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) throw new Error("Planilha sem abas.");
-  const matriz = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]!, {
-    header: 1,
-    raw: true,
-    defval: "",
-  }) as (string | number)[][];
+const FONTE = "Metabase (consulta pública)";
+
+export async function importarLocalmente(): Promise<ResultadoLocal> {
+  const resposta = await fetch("/api/metabase", { credentials: "same-origin" });
+  const corpo = (await resposta.json().catch(() => ({}))) as {
+    ok?: boolean;
+    linhas?: LinhaMetabase[];
+    error?: string;
+  };
+  if (!resposta.ok || !corpo.ok || !corpo.linhas) {
+    throw new Error(corpo.error ?? "Não foi possível acessar o link do Metabase.");
+  }
+  const matriz = jsonParaMatriz(corpo.linhas);
 
   const anoPadrao = anoExercicio();
   const n = normalizarMatriz(matriz, { anoPadrao });
   if (n.rejeitadas.length > 0) {
-    return { payload: vazioLocal(file.name), total: n.total, importadas: 0, rejeitadas: n.rejeitadas };
+    return { payload: vazioLocal(FONTE), total: n.total, importadas: 0, rejeitadas: n.rejeitadas };
   }
 
   const cc: string[] = [];
