@@ -465,7 +465,7 @@ function DashboardInner() {
               Painel Gerencial de Investimentos – SESI MT
             </h1>
             <p className="text-sm text-navy-foreground/70">
-              Visão Executiva – {periodo}/{ANO()} • {fonte === "db" ? "PostgreSQL • dash_sesi" : "Base SHIFT 2026"}
+              Visão Executiva – {periodo}/{anoSelecionado} • {fonte === "db" ? "PostgreSQL • dash_sesi" : "Base de demonstração"}
             </p>
           </div>
         </div>
@@ -677,7 +677,7 @@ function DashboardInner() {
 
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Panel title={`Execução ${periodo}/${ANO()}`} className="xl:col-span-3">
+          <Panel title={`Execução ${periodo}/${anoSelecionado}`} className="xl:col-span-3">
             <div className="relative">
               <ExecucaoDonut pct={execPct} />
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -872,7 +872,7 @@ function DashboardInner() {
                 <CalendarDays className="size-4 shrink-0 text-brand" />
                 <div>
                   <p className="font-semibold">Data base:</p>
-                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{ANO()}</p>
+                  <p className="text-muted-foreground">Até {MESES[mb - 1]}/{anoSelecionado}</p>
                 </div>
               </div>
             </div>
