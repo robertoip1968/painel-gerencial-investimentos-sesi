@@ -11,11 +11,7 @@ const MAX_REDIRECTS = 5;
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 
 /** GET via node:https com agente dedicado (exceção TLS só aqui), seguindo redirects. */
-function getInseguro(
-  url: string,
-  timeoutMs: number,
-  restantes: number,
-): Promise<string> {
+function getInseguro(url: string, timeoutMs: number, restantes: number): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     void (async () => {
       const https = await import("node:https");
@@ -27,7 +23,12 @@ function getInseguro(
 
       const req = https.request(
         url,
-        { agent: agente, method: "GET", headers: { Accept: "application/json" }, timeout: timeoutMs },
+        {
+          agent: agente,
+          method: "GET",
+          headers: { Accept: "application/json" },
+          timeout: timeoutMs,
+        },
         (res) => {
           const status = res.statusCode ?? 0;
 
@@ -35,7 +36,11 @@ function getInseguro(
             const local = res.headers.location;
             res.resume();
             if (!local) {
-              fim(() => reject(new Error(`O Metabase respondeu ${status} sem endereço de redirecionamento.`)));
+              fim(() =>
+                reject(
+                  new Error(`O Metabase respondeu ${status} sem endereço de redirecionamento.`),
+                ),
+              );
               return;
             }
             if (restantes <= 0) {
@@ -44,7 +49,9 @@ function getInseguro(
             }
             const destino = new URL(local, url);
             if (destino.protocol !== "https:") {
-              fim(() => reject(new Error("Redirecionamento do Metabase para protocolo não suportado.")));
+              fim(() =>
+                reject(new Error("Redirecionamento do Metabase para protocolo não suportado.")),
+              );
               return;
             }
             agente.destroy();
@@ -93,7 +100,6 @@ async function buscarJson(url: string, timeoutMs: number): Promise<unknown> {
     throw new Error("Resposta do Metabase não é um JSON válido.");
   }
 }
-
 
 /** Busca as linhas da pergunta pública do Metabase. */
 export async function buscarLinhasMetabase(): Promise<LinhaMetabase[]> {
