@@ -23,7 +23,9 @@ export const Route = createFileRoute("/api/metabase")({
               ok: false,
               error: e instanceof Error ? e.message : "Falha ao consultar o Metabase.",
             }),
-            { status: 502, headers: json },
+            // 200 de propósito: a falha é de rede com o Metabase e é tratada
+            // na interface; um 5xx dispararia o overlay de erro da aplicação.
+            { status: 200, headers: json },
           );
         }
       },
