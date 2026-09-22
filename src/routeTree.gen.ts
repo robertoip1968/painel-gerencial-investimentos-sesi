@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiImportarRouteImport } from './routes/api/importar'
+import { Route as ApiMetabaseRouteImport } from './routes/api/metabase'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthSessaoRouteImport } from './routes/api/auth/sessao'
@@ -43,6 +44,11 @@ const ApiImportarRoute = ApiImportarRouteImport.update({
   path: '/api/importar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetabaseRoute = ApiMetabaseRouteImport.update({
+  id: '/api/metabase',
+  path: '/api/metabase',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
   id: '/api/auth/login',
   path: '/api/auth/login',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/importar': typeof ApiImportarRoute
+  '/api/metabase': typeof ApiMetabaseRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/sessao': typeof ApiAuthSessaoRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/importar': typeof ApiImportarRoute
+  '/api/metabase': typeof ApiMetabaseRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/sessao': typeof ApiAuthSessaoRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/importar': typeof ApiImportarRoute
+  '/api/metabase': typeof ApiMetabaseRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/sessao': typeof ApiAuthSessaoRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/health'
     | '/api/importar'
+    | '/api/metabase'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/sessao'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/health'
     | '/api/importar'
+    | '/api/metabase'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/sessao'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/health'
     | '/api/importar'
+    | '/api/metabase'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/sessao'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiImportarRoute: typeof ApiImportarRoute
+  ApiMetabaseRoute: typeof ApiMetabaseRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessaoRoute: typeof ApiAuthSessaoRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImportarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/metabase': {
+      id: '/api/metabase'
+      path: '/api/metabase'
+      fullPath: '/api/metabase'
+      preLoaderRoute: typeof ApiMetabaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/login': {
       id: '/api/auth/login'
       path: '/api/auth/login'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiImportarRoute: ApiImportarRoute,
+  ApiMetabaseRoute: ApiMetabaseRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessaoRoute: ApiAuthSessaoRoute,
