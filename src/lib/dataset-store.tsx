@@ -19,7 +19,7 @@ import {
   filtrosAtivos,
 } from "@/lib/facts";
 import { carregarFatos } from "@/lib/fatos.functions";
-import { aplicarConfigExercicio } from "@/lib/exercicio";
+import { anoExercicio, aplicarConfigExercicio } from "@/lib/exercicio";
 
 export type RiscoFiltro = "ok" | "warn" | "crit" | "semexec" | null;
 
@@ -36,6 +36,12 @@ type Ctx = {
   setRisco: (r: RiscoFiltro) => void;
   /** Recarrega os fatos direto do PostgreSQL (após importação, por exemplo). */
   recarregar: () => Promise<void>;
+  /** Exercício exibido no painel. */
+  anoSelecionado: number;
+  /** Exercícios existentes na base (DESC). */
+  anosDisponiveis: number[];
+  /** Troca de exercício: recarrega os fatos e limpa filtros do ano anterior. */
+  setAnoSelecionado: (ano: number) => void;
   /** DEV/preview: aplica fatos lidos localmente do .xlsx (sem banco). */
   aplicarLocais: (p: FatosPayload) => void;
   carregando: boolean;
@@ -60,6 +66,9 @@ const DatasetContext = createContext<Ctx>({
   carregando: false,
   erroDados: null,
   fonte: "local",
+  anoSelecionado: anoExercicio(),
+  anosDisponiveis: [],
+  setAnoSelecionado: () => {},
 });
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
@@ -70,12 +79,18 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
   const [erroDados, setErroDados] = useState<string | null>(null);
   const [fonte, setFonte] = useState<Ctx["fonte"]>("local");
+  const [anoSelecionado, setAno] = useState<number>(() => anoExercicio());
+  const [anosDisponiveis, setAnosDisponiveis] = useState<number[]>([]);
 
-  const recarregar = useCallback(async () => {
+  const carregarAno = useCallback(async (ano?: number) => {
     setCarregando(true);
     try {
-      const r = await carregarFatos();
-      if (r.config) aplicarConfigExercicio(r.config);
+      const r = await carregarFatos(ano ? { data: { ano } } : undefined);
+      if (r.config) {
+        aplicarConfigExercicio(r.config);
+        setAno(r.config.ano);
+        setAnosDisponiveis(r.config.anosDisponiveis ?? []);
+      }
       setFonte(r.fonte);
       if (r.fonte === "db" && r.payload) {
         aplicarFatos(r.payload);
@@ -103,9 +118,26 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /** Recarrega o exercício atualmente selecionado (usado após importação). */
+  const recarregar = useCallback(() => carregarAno(anoSelecionado), [carregarAno, anoSelecionado]);
+
+  const setAnoSelecionado = useCallback(
+    (ano: number) => {
+      if (ano === anoSelecionado) return;
+      setAno(ano);
+      // filtros do exercício anterior não valem para o novo ano
+      setFiltros(filtrosPadrao);
+      setRisco(null);
+      setUpload(null);
+      void carregarAno(ano);
+    },
+    [anoSelecionado, carregarAno],
+  );
+
   useEffect(() => {
-    void recarregar();
-  }, [recarregar]);
+    void carregarAno();
+    // carga inicial: o servidor decide o exercício padrão
+  }, [carregarAno]);
 
   const aplicarLocais = useCallback((p: FatosPayload) => {
     aplicarFatos(p);
@@ -141,8 +173,26 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       carregando,
       erroDados,
       fonte,
+      anoSelecionado,
+      anosDisponiveis,
+      setAnoSelecionado,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte]);
+  }, [
+    upload,
+    filtros,
+    setFiltro,
+    limparFiltros,
+    risco,
+    versao,
+    recarregar,
+    aplicarLocais,
+    carregando,
+    erroDados,
+    fonte,
+    anoSelecionado,
+    anosDisponiveis,
+    setAnoSelecionado,
+  ]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
