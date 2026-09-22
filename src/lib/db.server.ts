@@ -233,11 +233,13 @@ export async function importarLancamentos(params: {
   try {
     client = await p.connect();
 
+    // 1 exercício => grava o ano; carga multi-ano => NULL (sem mudar o schema).
+    const anoRegistro = anos.length === 1 ? (anos[0] ?? null) : null;
     const reg = await client.query(
       `INSERT INTO dash_sesi.importacoes
          (nome_arquivo, usuario, ano, quantidade_linhas, quantidade_rejeitada, status)
        VALUES ($1, $2, $3, $4, $5, 'PENDENTE') RETURNING id`,
-      [params.arquivo, params.usuario, anos[0] ?? null, params.totalLidas, params.rejeitadas.length],
+      [params.arquivo, params.usuario, anoRegistro, params.totalLidas, params.rejeitadas.length],
     );
     importacaoId = Number(reg.rows[0].id);
 
@@ -289,7 +291,9 @@ export async function importarLancamentos(params: {
       [importacaoId],
     );
     if (invalidas.rows[0].n > 0) {
-      throw new Error(`${invalidas.rows[0].n} linha(s) inválida(s) detectada(s) na validação final.`);
+      throw new Error(
+        `${invalidas.rows[0].n} linha(s) inválida(s) detectada(s) na validação final.`,
+      );
     }
 
     const conferencia = await client.query(
@@ -330,8 +334,6 @@ export async function importarLancamentos(params: {
       );
     }
 
-
-
     // substitui integralmente os exercícios presentes no arquivo
     await client.query(`DELETE FROM dash_sesi.lancamentos WHERE ano = ANY($1::smallint[])`, [anos]);
 
@@ -357,7 +359,6 @@ export async function importarLancamentos(params: {
         `Promoção incompleta: ${promovidas.rowCount ?? 0} de ${params.linhas.length} linhas gravadas. Nada foi alterado.`,
       );
     }
-
 
     await client.query(`DELETE FROM dash_sesi.fin_shift_staging WHERE importacao_id = $1`, [
       importacaoId,

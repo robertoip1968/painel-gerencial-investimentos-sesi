@@ -1,11 +1,13 @@
 /**
- * Modo de desenvolvimento/pré-visualização: lê os dados do Metabase pelo
- * proxy /api/metabase e monta o payload de fatos em memória.
+ * Modo de desenvolvimento/pré-visualização: monta o payload de fatos em memória.
+ * Fonte oficial: consulta do Metabase via proxy /api/metabase.
+ * Contingência: planilha .xlsx lida no próprio navegador.
  * Nada é gravado no PostgreSQL — serve apenas para conferir os dados aqui.
  */
 import type { FatosPayload } from "@/lib/facts";
-import { normalizarMatriz } from "@/lib/import-normalize";
-import { jsonParaMatriz, type LinhaMetabase } from "@/lib/metabase";
+import { normalizarMatriz, type LinhaNormalizada } from "@/lib/import-normalize";
+import { metabaseParaLinhas } from "@/lib/metabase-map";
+import type { LinhaMetabase } from "@/lib/metabase";
 import { anoExercicio } from "@/lib/exercicio";
 
 type Bloco = FatosPayload["despesa"];
@@ -38,11 +40,18 @@ export type ResultadoLocal = {
   total: number;
   importadas: number;
   rejeitadas: { linha: number; motivo: string }[];
+  /** Exercícios presentes na carga (a pré-visualização mostra apenas um). */
+  anos: number[];
+  /** Exercício efetivamente exibido no payload. */
+  anoExibido: number;
+  empresaExibida: string;
 };
 
-const FONTE = "Metabase (consulta pública)";
+const FONTE_METABASE = "Metabase (consulta oficial)";
 
-export async function importarLocalmente(): Promise<ResultadoLocal> {
+export async function importarLocalmente(arquivo?: File): Promise<ResultadoLocal> {
+  if (arquivo) return importarPlanilhaLocal(arquivo);
+
   const resposta = await fetch("/api/metabase", { credentials: "same-origin" });
   const corpo = (await resposta.json().catch(() => ({}))) as {
     ok?: boolean;
@@ -50,15 +59,64 @@ export async function importarLocalmente(): Promise<ResultadoLocal> {
     error?: string;
   };
   if (!resposta.ok || !corpo.ok || !corpo.linhas) {
-    throw new Error(corpo.error ?? "Não foi possível acessar o link do Metabase.");
+    throw new Error(corpo.error ?? "Não foi possível acessar a consulta oficial.");
   }
-  const matriz = jsonParaMatriz(corpo.linhas);
 
-  const anoPadrao = anoExercicio();
-  const n = normalizarMatriz(matriz, { anoPadrao });
+  const n = metabaseParaLinhas(corpo.linhas);
   if (n.rejeitadas.length > 0) {
-    return { payload: vazioLocal(FONTE), total: n.total, importadas: 0, rejeitadas: n.rejeitadas };
+    return {
+      payload: vazioLocal(FONTE_METABASE),
+      total: n.total,
+      importadas: 0,
+      rejeitadas: n.rejeitadas,
+      anos: [],
+      anoExibido: anoExercicio(),
+      empresaExibida: "02MT",
+    };
   }
+  return montar(n.linhas, n.total, FONTE_METABASE);
+}
+
+async function importarPlanilhaLocal(arquivo: File): Promise<ResultadoLocal> {
+  const XLSX = await import("xlsx");
+  const wb = XLSX.read(new Uint8Array(await arquivo.arrayBuffer()), { type: "array" });
+  const nome = wb.SheetNames[0];
+  const aba = nome ? wb.Sheets[nome] : undefined;
+  if (!aba) throw new Error("Planilha sem abas de dados.");
+  const matriz = XLSX.utils.sheet_to_json<(string | number | null)[]>(aba, {
+    header: 1,
+    raw: true,
+    defval: "",
+  });
+  const fonte = `Planilha (contingência) — ${arquivo.name}`;
+  const n = normalizarMatriz(matriz, { anoPadrao: anoExercicio() });
+  if (n.rejeitadas.length > 0) {
+    return {
+      payload: vazioLocal(fonte),
+      total: n.total,
+      importadas: 0,
+      rejeitadas: n.rejeitadas,
+      anos: [],
+      anoExibido: anoExercicio(),
+      empresaExibida: "02MT",
+    };
+  }
+  return montar(n.linhas, n.total, fonte);
+}
+
+/**
+ * Agrega as linhas de UM exercício e UMA empresa. A chave de agregação inclui
+ * ano e empresa, e o payload é filtrado antes de agregar — exercícios diferentes
+ * nunca são somados sob o mesmo rótulo (carga histórica pode ter vários anos).
+ */
+function montar(linhas: LinhaNormalizada[], total: number, fonte: string): ResultadoLocal {
+  const anos = [...new Set(linhas.map((l) => l.ano))].sort();
+  const preferido = anoExercicio();
+  const ano = anos.includes(preferido) ? preferido : (anos[anos.length - 1] ?? preferido);
+  const empresasDoAno = [...new Set(linhas.filter((l) => l.ano === ano).map((l) => l.codEmpresa))];
+  const empresa = empresasDoAno.includes("02MT") ? "02MT" : (empresasDoAno[0] ?? "02MT");
+
+  const doRecorte = linhas.filter((l) => l.ano === ano && l.codEmpresa === empresa);
 
   const cc: string[] = [];
   const item: string[] = [];
@@ -69,19 +127,14 @@ export async function importarLocalmente(): Promise<ResultadoLocal> {
 
   const despesa = blocoVazio();
   const receita = blocoVazio();
-  const chaves = new Map<string, number>(); // agregação por grão
+  const chaves = new Map<string, number>();
 
-  let ano = anoPadrao;
-  let empresa = "02MT";
-
-  for (const l of n.linhas) {
-    ano = l.ano;
-    empresa = l.codEmpresa || empresa;
+  for (const l of doRecorte) {
     const b = l.origem === "RECEITA" ? receita : despesa;
     const iCC = indice(cc, mCC, rotulo(l.codCentroCusto, l.centroCusto));
     const iItem = indice(item, mItem, rotulo(l.codItem, l.item));
     const iConta = indice(conta, mConta, rotulo(l.codConta, l.conta));
-    const chave = `${l.origem}|${l.mes}|${iCC}|${iItem}|${iConta}`;
+    const chave = `${l.ano}|${l.codEmpresa}|${l.origem}|${l.mes}|${iCC}|${iItem}|${iConta}`;
     const existente = chaves.get(chave);
     if (existente !== undefined) {
       b.linhas[existente] = b.linhas[existente]! + 1;
@@ -101,20 +154,25 @@ export async function importarLocalmente(): Promise<ResultadoLocal> {
     b.n = i + 1;
   }
 
+  const sufixo = anos.length > 1 ? ` — exercício ${ano} de ${anos.join(", ")}` : "";
+
   return {
     payload: {
       ano,
       empresa,
-      fileName: `${FONTE} — leitura local (sem banco)`,
+      fileName: `${fonte} — leitura local (sem banco)${sufixo}`,
       cc,
       item,
       conta,
       despesa,
       receita,
     },
-    total: n.total,
-    importadas: n.linhas.length,
+    total,
+    importadas: doRecorte.length,
     rejeitadas: [],
+    anos,
+    anoExibido: ano,
+    empresaExibida: empresa,
   };
 }
 
