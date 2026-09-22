@@ -20,10 +20,9 @@ export function AtualizarBase() {
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<string[]>([]);
   const [resultado, setResultado] = useState<Resultado | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const semBanco = /DATABASE_URL|não configurado|conex/i.test(erro ?? "");
 
-  async function enviar(file: File) {
+  async function atualizar() {
     setErro(null);
     setDetalhes([]);
     setResultado(null);
@@ -31,18 +30,18 @@ export function AtualizarBase() {
     try {
       if (modoLocal) {
         const { importarLocalmente } = await import("@/lib/import-local");
-        const r = await importarLocalmente(file);
+        const r = await importarLocalmente();
         if (r.rejeitadas.length > 0) {
           setErro(
-            `Importação cancelada: ${r.rejeitadas.length} de ${r.total} linha(s) não passaram na validação.`,
+            `Importação cancelada: ${r.rejeitadas.length} de ${r.total} registro(s) não passaram na validação.`,
           );
-          setDetalhes(r.rejeitadas.slice(0, 20).map((x) => `Linha ${x.linha}: ${x.motivo}`));
+          setDetalhes(r.rejeitadas.slice(0, 20).map((x) => `Registro ${x.linha}: ${x.motivo}`));
           return;
         }
         aplicarLocais(r.payload);
         setResultado({
           ok: true,
-          arquivo: file.name,
+          arquivo: "Metabase (consulta pública)",
           linhasEncontradas: r.total,
           linhasImportadas: r.importadas,
           linhasRejeitadas: 0,
@@ -50,12 +49,9 @@ export function AtualizarBase() {
         });
         return;
       }
-      const fd = new FormData();
-      fd.append("arquivo", file);
       const r = await fetch("/api/importar", {
         method: "POST",
         credentials: "same-origin",
-        body: fd,
       });
       const j = (await r.json().catch(() => ({}))) as Resultado & { error?: string };
       if (!r.ok || !j.ok) {
