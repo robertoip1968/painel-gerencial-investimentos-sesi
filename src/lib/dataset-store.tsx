@@ -36,6 +36,12 @@ type Ctx = {
   setRisco: (r: RiscoFiltro) => void;
   /** Recarrega os fatos direto do PostgreSQL (após importação, por exemplo). */
   recarregar: () => Promise<void>;
+  /** Exercício exibido no painel. */
+  anoSelecionado: number;
+  /** Exercícios existentes na base (DESC). */
+  anosDisponiveis: number[];
+  /** Troca de exercício: recarrega os fatos e limpa filtros do ano anterior. */
+  setAnoSelecionado: (ano: number) => void;
   /** DEV/preview: aplica fatos lidos localmente do .xlsx (sem banco). */
   aplicarLocais: (p: FatosPayload) => void;
   carregando: boolean;
