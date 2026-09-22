@@ -19,7 +19,7 @@ import {
   filtrosAtivos,
 } from "@/lib/facts";
 import { carregarFatos } from "@/lib/fatos.functions";
-import { aplicarConfigExercicio } from "@/lib/exercicio";
+import { anoExercicio, aplicarConfigExercicio } from "@/lib/exercicio";
 
 export type RiscoFiltro = "ok" | "warn" | "crit" | "semexec" | null;
 
@@ -174,8 +174,11 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       carregando,
       erroDados,
       fonte,
+      anoSelecionado,
+      anosDisponiveis,
+      setAnoSelecionado,
     };
-  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte]);
+  }, [upload, filtros, setFiltro, limparFiltros, risco, versao, recarregar, aplicarLocais, carregando, erroDados, fonte, anoSelecionado, anosDisponiveis, setAnoSelecionado]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
 }
