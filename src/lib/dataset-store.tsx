@@ -79,12 +79,18 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
   const [erroDados, setErroDados] = useState<string | null>(null);
   const [fonte, setFonte] = useState<Ctx["fonte"]>("local");
+  const [anoSelecionado, setAno] = useState<number>(() => anoExercicio());
+  const [anosDisponiveis, setAnosDisponiveis] = useState<number[]>([]);
 
-  const recarregar = useCallback(async () => {
+  const carregarAno = useCallback(async (ano?: number) => {
     setCarregando(true);
     try {
-      const r = await carregarFatos();
-      if (r.config) aplicarConfigExercicio(r.config);
+      const r = await carregarFatos(ano ? { data: { ano } } : undefined);
+      if (r.config) {
+        aplicarConfigExercicio(r.config);
+        setAno(r.config.ano);
+        setAnosDisponiveis(r.config.anosDisponiveis ?? []);
+      }
       setFonte(r.fonte);
       if (r.fonte === "db" && r.payload) {
         aplicarFatos(r.payload);
