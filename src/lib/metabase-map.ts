@@ -110,11 +110,7 @@ export function origemDeContaNivel1(valor: unknown): "DESPESA" | "RECEITA" | nul
  *
  * Devolve null quando não for possível derivar com segurança.
  */
-export function derivarCodItem(
-  nivel5: unknown,
-  codItem: unknown,
-  nivel4?: unknown,
-): string | null {
+export function derivarCodItem(nivel5: unknown, codItem: unknown, nivel4?: unknown): string | null {
   const filho = normalizarCodigo(codItem as string | number).trim();
   if (!/^\d{4,}$/.test(filho)) return null;
 
@@ -127,7 +123,6 @@ export function derivarCodItem(
   if (!/^\d+$/.test(base)) return null;
   return base + filho.slice(-2);
 }
-
 
 /** Converte a resposta do Metabase em lançamentos prontos para o banco. */
 export function metabaseParaLinhas(rows: LinhaMetabase[]): ResultadoMetabase {
@@ -269,7 +264,10 @@ function consolidarPorChaveOficial(validas: Valida[]): {
   linhas: LinhaNormalizada[];
   conflitos: Rejeitada[];
 } {
-  const mapa = new Map<string, { linha: number; dados: LinhaNormalizada; nomes: Valida["nomes"] }>();
+  const mapa = new Map<
+    string,
+    { linha: number; dados: LinhaNormalizada; nomes: Valida["nomes"] }
+  >();
   const conflitos: Rejeitada[] = [];
 
   for (const v of validas) {
@@ -306,4 +304,3 @@ function consolidarPorChaveOficial(validas: Valida[]): {
 
   return { linhas: [...mapa.values()].map((v) => v.dados), conflitos };
 }
-
