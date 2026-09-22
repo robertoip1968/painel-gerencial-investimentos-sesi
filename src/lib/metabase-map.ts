@@ -36,6 +36,7 @@ export const COLUNAS_METABASE = [
   "Conta_Nivel1",
   "CodCentroCusto",
   "CentroCusto",
+  "CodItem_Nivel4",
   "CodItem_Nivel5",
   "CodItem",
   "ItemContabil",
