@@ -118,9 +118,27 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /** Recarrega o exercício atualmente selecionado (usado após importação). */
+  const recarregar = useCallback(() => carregarAno(anoSelecionado), [carregarAno, anoSelecionado]);
+
+  const setAnoSelecionado = useCallback(
+    (ano: number) => {
+      if (ano === anoSelecionado) return;
+      setAno(ano);
+      // filtros do exercício anterior não valem para o novo ano
+      setFiltros(filtrosPadrao);
+      setRisco(null);
+      setUpload(null);
+      void carregarAno(ano);
+    },
+    [anoSelecionado, carregarAno],
+  );
+
   useEffect(() => {
-    void recarregar();
-  }, [recarregar]);
+    void carregarAno();
+    // carga inicial: o servidor decide o exercício padrão
+     
+  }, [carregarAno]);
 
   const aplicarLocais = useCallback((p: FatosPayload) => {
     aplicarFatos(p);
