@@ -44,17 +44,15 @@ export const Route = createFileRoute("/api/importar")({
             );
           }
           if (arquivo.size > MAX_BYTES) {
-            return new Response(
-              JSON.stringify({ error: "Arquivo acima do limite de 50 MB." }),
-              { status: 413, headers: json },
-            );
+            return new Response(JSON.stringify({ error: "Arquivo acima do limite de 50 MB." }), {
+              status: 413,
+              headers: json,
+            });
           }
 
           const XLSX = await import("xlsx");
           const { normalizarMatriz } = await import("@/lib/import-normalize");
-          const anoPadrao = Number(
-            process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear(),
-          );
+          const anoPadrao = Number(process.env["PAINEL_ANO_PADRAO"] ?? new Date().getFullYear());
           origemNome = `Planilha (contingência) — ${arquivo.name}`;
           try {
             const wb = XLSX.read(new Uint8Array(await arquivo.arrayBuffer()), { type: "array" });

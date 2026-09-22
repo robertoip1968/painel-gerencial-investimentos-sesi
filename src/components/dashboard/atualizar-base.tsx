@@ -113,7 +113,6 @@ export function AtualizarBase() {
               PostgreSQL. Ao recarregar a página os dados voltam ao conjunto de demonstração.
             </p>
           ) : null}
-
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -151,7 +150,6 @@ export function AtualizarBase() {
           </button>
         </div>
       </div>
-
 
       {resultado ? (
         <div className="mt-3 rounded-md border border-ok/40 bg-ok/10 p-3 text-[12px] text-foreground">

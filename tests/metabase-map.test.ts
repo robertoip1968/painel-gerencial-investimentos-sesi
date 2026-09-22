@@ -56,7 +56,8 @@ describe("transformador Metabase", () => {
     expect(r.anos).toEqual([2025, 2026]);
     const chaves = new Set(
       r.linhas.map(
-        (l) => `${l.origem}|${l.codEmpresa}|${l.ano}|${l.mes}|${l.codCentroCusto}|${l.codItem}|${l.codConta}`,
+        (l) =>
+          `${l.origem}|${l.codEmpresa}|${l.ano}|${l.mes}|${l.codCentroCusto}|${l.codItem}|${l.codConta}`,
       ),
     );
     expect(chaves.size).toBe(2);

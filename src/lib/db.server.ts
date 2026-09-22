@@ -291,7 +291,9 @@ export async function importarLancamentos(params: {
       [importacaoId],
     );
     if (invalidas.rows[0].n > 0) {
-      throw new Error(`${invalidas.rows[0].n} linha(s) inválida(s) detectada(s) na validação final.`);
+      throw new Error(
+        `${invalidas.rows[0].n} linha(s) inválida(s) detectada(s) na validação final.`,
+      );
     }
 
     const conferencia = await client.query(
@@ -332,8 +334,6 @@ export async function importarLancamentos(params: {
       );
     }
 
-
-
     // substitui integralmente os exercícios presentes no arquivo
     await client.query(`DELETE FROM dash_sesi.lancamentos WHERE ano = ANY($1::smallint[])`, [anos]);
 
@@ -359,7 +359,6 @@ export async function importarLancamentos(params: {
         `Promoção incompleta: ${promovidas.rowCount ?? 0} de ${params.linhas.length} linhas gravadas. Nada foi alterado.`,
       );
     }
-
 
     await client.query(`DELETE FROM dash_sesi.fin_shift_staging WHERE importacao_id = $1`, [
       importacaoId,
