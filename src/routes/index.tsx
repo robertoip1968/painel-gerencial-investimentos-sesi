@@ -31,7 +31,6 @@ import { DatasetProvider, useDataset } from "@/lib/dataset-store";
 import { kpisFromDataset } from "@/lib/kpi-from-dataset";
 import { brl } from "@/lib/dashboard-data";
 import {
-  ANO,
   MESES,
   centrosTop,
   contasPct,
