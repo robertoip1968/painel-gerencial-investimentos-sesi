@@ -8,6 +8,7 @@ const base = {
   Conta_Nivel1: "DESPESAS",
   CodCentroCusto: "13040107",
   CentroCusto: "SESI ESCOLA CUIABA",
+  CodItem_Nivel4: "2630610",
   CodItem_Nivel5: "26306100101",
   CodItem: "30610010103",
   ItemContabil: "50 ANOS SESI - COOPERACAO SOCIAL",
