@@ -46,6 +46,6 @@ describe("riscoResumo", () => {
     const r = riscoResumo(dataset(comPrevisto));
     const crit = r.find((x) => x.titulo === "Crítico")!;
     expect(crit.qtd).toBe(1);
-    expect(crit.valor).toContain("1.000,00");
+    expect(crit.valor).toBe("R$ 1,50 mi");
   });
 });
