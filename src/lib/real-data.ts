@@ -150,7 +150,10 @@ export function riscoResumo(d: Dataset) {
   const meta = (mesBase(d) / 12) * 100;
   const buckets = { ok: { q: 0, v: 0 }, warn: { q: 0, v: 0 }, crit: { q: 0, v: 0 } };
   d.segCentroCusto.forEach((c) => {
-    const p = c.previsto > 0 ? (c.realizado / c.previsto) * 100 : 0;
+    // CC sem previsão (previsto <= 0) fica fora da classificação de risco —
+    // mesma população usada pela Leitura Rápida (respostasFrom).
+    if (!(c.previsto > 0)) return;
+    const p = (c.realizado / c.previsto) * 100;
     const s = situacaoDe(p, meta);
     buckets[s].q += 1;
     buckets[s].v += c.previsto;
