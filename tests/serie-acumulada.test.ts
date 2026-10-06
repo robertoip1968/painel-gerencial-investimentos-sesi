@@ -52,7 +52,10 @@ describe("serieAcumulada com mês parcial", () => {
   });
 });
 describe("serieAcumulada limitada pela última importação", () => {
-  const nove = [433579.66, 3807611.44, 1602561.45, 1593126.06, 2440602.42, 2335578.27, 3612562.93, 3336548.51, 3608921.02];
+  const nove = [
+    433579.66, 3807611.44, 1602561.45, 1593126.06, 2440602.42, 2335578.27, 3612562.93, 3336548.51,
+    3608921.02,
+  ];
   const somaSet = nove.reduce((a, b) => a + b, 0);
 
   it("importação em OUT + OUT realizado 0 => OUT = acumulado de SET e NOV null", () => {
