@@ -1,7 +1,20 @@
 import type { Dataset } from "@/lib/csv-import";
 import { anoExercicio, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
 
-export const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+export const MESES = [
+  "JAN",
+  "FEV",
+  "MAR",
+  "ABR",
+  "MAI",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SET",
+  "OUT",
+  "NOV",
+  "DEZ",
+];
 
 /** Exercício analisado (PAINEL_ANO_PADRAO, aplicado pelo backend). */
 export const ANO = () => anoExercicio();
@@ -55,7 +68,13 @@ export function realizadoFechado(d: Dataset) {
 /** Série acumulada em milhões, com forecast pelo ritmo médio realizado. */
 export function serieAcumulada(d: Dataset) {
   const m = d.mensal ?? [];
-  if (!m.length) return [] as { mes: string; previsto: number; realizado: number | null; forecast: number | null }[];
+  if (!m.length)
+    return [] as {
+      mes: string;
+      previsto: number;
+      realizado: number | null;
+      forecast: number | null;
+    }[];
   const base_ = mesBase(d);
   const realTotal = m.slice(0, base_).reduce((a, x) => a + x.realizado, 0);
   const ritmo = realTotal / base_;
@@ -98,7 +117,9 @@ export function forecastAno(d: Dataset) {
 export function contasPct(d: Dataset, n = 9) {
   const total = d.previsto || 1;
   const list = [...d.segConta].sort((a, b) => b.previsto - a.previsto);
-  const top = list.slice(0, n).map((c) => ({ nome: c.nome, pct: (c.previsto / total) * 100, valor: c.previsto }));
+  const top = list
+    .slice(0, n)
+    .map((c) => ({ nome: c.nome, pct: (c.previsto / total) * 100, valor: c.previsto }));
   const resto = list.slice(n).reduce((a, c) => a + c.previsto, 0);
   if (resto > 0) top.push({ nome: "Demais contas", pct: (resto / total) * 100, valor: resto });
   return top;
@@ -143,14 +164,20 @@ export function maioresSaldos(d: Dataset, n = 10) {
     .map((i) => ({ item: i.nome, cc: i.grupo, saldo: i.previsto - i.realizado }))
     .sort((a, b) => b.saldo - a.saldo)
     .slice(0, n)
-    .map((i) => ({ ...i, pct: `${((i.saldo / saldoTotal) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` }));
+    .map((i) => ({
+      ...i,
+      pct: `${((i.saldo / saldoTotal) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
+    }));
 }
 
 export function riscoResumo(d: Dataset) {
   const meta = (mesBase(d) / 12) * 100;
   const buckets = { ok: { q: 0, v: 0 }, warn: { q: 0, v: 0 }, crit: { q: 0, v: 0 } };
   d.segCentroCusto.forEach((c) => {
-    const p = c.previsto > 0 ? (c.realizado / c.previsto) * 100 : 0;
+    // CC sem previsão (previsto <= 0) fica fora da classificação de risco —
+    // mesma população usada pela Leitura Rápida (respostasFrom).
+    if (!(c.previsto > 0)) return;
+    const p = (c.realizado / c.previsto) * 100;
     const s = situacaoDe(p, meta);
     buckets[s].q += 1;
     buckets[s].v += c.previsto;
@@ -208,7 +235,9 @@ export function respostasFrom(d: Dataset) {
     {
       pergunta: "Onde estão os maiores investimentos?",
       resposta: maiorConta?.nome ?? "—",
-      detalhe: maiorConta ? `${pctFmt(maiorConta.previsto, d.previsto)} do orçamento • ${mi(maiorConta.previsto)}` : "",
+      detalhe: maiorConta
+        ? `${pctFmt(maiorConta.previsto, d.previsto)} do orçamento • ${mi(maiorConta.previsto)}`
+        : "",
       tone: "brand" as const,
     },
     {
@@ -217,7 +246,12 @@ export function respostasFrom(d: Dataset) {
       detalhe: `Execução abaixo de ${(meta * 0.6).toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% da meta linear`,
       tone: "crit" as const,
     },
-    { pergunta: "Qual o ritmo de execução?", resposta: `${mi(media)}/mês`, detalhe: `Necessário: ${mi(necessario)}/mês`, tone: "warn" as const },
+    {
+      pergunta: "Qual o ritmo de execução?",
+      resposta: `${mi(media)}/mês`,
+      detalhe: `Necessário: ${mi(necessario)}/mês`,
+      tone: "warn" as const,
+    },
     {
       pergunta: "Qual a tendência de encerramento?",
       resposta: `${mi(fc)} (${pctFmt(fc, d.previsto)})`,
