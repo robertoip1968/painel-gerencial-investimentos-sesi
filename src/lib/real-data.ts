@@ -1,5 +1,5 @@
 import type { Dataset } from "@/lib/csv-import";
-import { anoExercicio, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
+import { anoExercicio, mesCobertoConfig, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
 
 export const MESES = [
   "JAN",
