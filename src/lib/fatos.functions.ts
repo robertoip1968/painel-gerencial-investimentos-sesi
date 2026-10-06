@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { FatosPayload } from "@/lib/facts";
-import { anoValido, escolherAno, mesFechadoPara } from "@/lib/exercicio";
+import { anoValido, escolherAno, mesCobertoPara, mesFechadoPara } from "@/lib/exercicio";
 
 export type CargaFatosPainel = {
   fonte: "db" | "local" | "indisponivel" | "vazio";
@@ -10,6 +10,8 @@ export type CargaFatosPainel = {
   config: {
     ano: number;
     mesFechado: number;
+    /** Mês coberto pela última importação SUCESSO (0 = desconhecido). */
+    mesCoberto: number;
     producao: boolean;
     /** Exercícios existentes no PostgreSQL, do mais recente ao mais antigo. */
     anosDisponiveis: number[];
@@ -33,6 +35,7 @@ export const carregarFatos = createServerFn({ method: "GET" })
       anoPadraoConfigurado,
       mesFechadoConfigurado,
       anosDisponiveisDoBanco,
+      ultimaImportacaoSucesso,
     } = await import("@/lib/db.server");
 
     const anoPadrao = anoPadraoConfigurado();
@@ -48,17 +51,22 @@ export const carregarFatos = createServerFn({ method: "GET" })
         config: {
           ano: anoPadrao,
           mesFechado: mesFechadoPadrao,
+          mesCoberto: 0,
           producao,
           anosDisponiveis: [],
         },
       };
     }
 
-    const anosDisponiveis = await anosDisponiveisDoBanco();
+    const [anosDisponiveis, ultimaImp] = await Promise.all([
+      anosDisponiveisDoBanco(),
+      ultimaImportacaoSucesso(),
+    ]);
     const ano = escolherAno(data?.ano, anosDisponiveis, anoPadrao);
     const config = {
       ano,
       mesFechado: mesFechadoPara(ano, anoPadrao, mesFechadoPadrao),
+      mesCoberto: mesCobertoPara(ano, anoPadrao, ultimaImp),
       producao,
       anosDisponiveis: anosDisponiveis.length > 0 ? anosDisponiveis : anoValido(ano) ? [ano] : [],
     };
