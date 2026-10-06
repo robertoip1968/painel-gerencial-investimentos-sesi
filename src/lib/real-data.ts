@@ -76,6 +76,7 @@ export function serieAcumulada(d: Dataset) {
       forecast: number | null;
     }[];
   const base_ = mesBase(d);
+  const ultimoRealizado = ultimoMesComRealizado(d);
   const realTotal = m.slice(0, base_).reduce((a, x) => a + x.realizado, 0);
   const ritmo = realTotal / base_;
   let accP = 0;
@@ -86,9 +87,11 @@ export function serieAcumulada(d: Dataset) {
     const mes = i + 1;
     let realizado: number | null = null;
     let forecast: number | null = null;
-    if (mes <= base_) {
+    if (mes <= ultimoRealizado) {
       accR += x.realizado;
       realizado = accR / 1e6;
+    }
+    if (mes <= base_) {
       accF = accR;
       if (mes === base_) forecast = accF / 1e6;
     } else {
