@@ -1,5 +1,5 @@
 import type { Dataset } from "@/lib/csv-import";
-import { anoExercicio, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
+import { anoExercicio, mesCobertoConfig, mesFechadoConfig, mesParcial } from "@/lib/exercicio";
 
 export const MESES = [
   "JAN",
@@ -76,7 +76,9 @@ export function serieAcumulada(d: Dataset) {
       forecast: number | null;
     }[];
   const base_ = mesBase(d);
-  const ultimoRealizado = ultimoMesComRealizado(d);
+  // Limite visual: mês coberto pela última importação (inclui meses com 0);
+  // sem essa informação, cai no último mês com realizado registrado.
+  const ultimoRealizado = mesCobertoConfig() || ultimoMesComRealizado(d);
   const realTotal = m.slice(0, base_).reduce((a, x) => a + x.realizado, 0);
   const ritmo = realTotal / base_;
   let accP = 0;

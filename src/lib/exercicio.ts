@@ -10,14 +10,42 @@ export type ConfigExercicio = {
   ano: number;
   /** 0 = não configurado; 1..12 = último mês encerrado. */
   mesFechado: number;
+  /** 0 = desconhecido; 1..12 = último mês coberto pela última importação. */
+  mesCoberto?: number;
 };
 
-const cfg: ConfigExercicio = { ano: new Date().getFullYear(), mesFechado: 0 };
+const cfg: Required<ConfigExercicio> = {
+  ano: new Date().getFullYear(),
+  mesFechado: 0,
+  mesCoberto: 0,
+};
 
 export function aplicarConfigExercicio(c: Partial<ConfigExercicio>) {
   if (c.ano && c.ano >= 2000 && c.ano <= 2100) cfg.ano = c.ano;
   if (typeof c.mesFechado === "number" && c.mesFechado >= 0 && c.mesFechado <= 12)
     cfg.mesFechado = Math.trunc(c.mesFechado);
+  if (typeof c.mesCoberto === "number" && c.mesCoberto >= 0 && c.mesCoberto <= 12)
+    cfg.mesCoberto = Math.trunc(c.mesCoberto);
+}
+
+/** Último mês coberto pela última importação (0 quando desconhecido). */
+export const mesCobertoConfig = () => cfg.mesCoberto;
+
+/**
+ * Mês coberto pela última importação SUCESSO para o exercício exibido:
+ * histórico (ano < padrão ou < ano da importação) => 12; mesmo ano da
+ * importação => mês da data_importacao; sem importação conhecida => 0.
+ */
+export function mesCobertoPara(
+  ano: number,
+  anoPadrao: number,
+  importacao: { ano: number; mes: number } | null,
+): number {
+  if (ano < anoPadrao) return 12;
+  if (!importacao) return 0;
+  if (ano < importacao.ano) return 12;
+  if (ano === importacao.ano) return Math.min(12, Math.max(0, importacao.mes));
+  return 0;
 }
 
 /** Exercício (ano) usado nas consultas e nos títulos do painel. */

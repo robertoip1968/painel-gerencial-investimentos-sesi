@@ -89,6 +89,27 @@ export async function anosDisponiveisDoBanco(): Promise<number[]> {
   }
 }
 
+/** Ano/mês (fuso de Cuiabá) da última importação com SUCESSO. */
+export async function ultimaImportacaoSucesso(): Promise<{ ano: number; mes: number } | null> {
+  const p = getPool();
+  if (!p) return null;
+  try {
+    const res = await p.query(
+      `SELECT EXTRACT(YEAR FROM data_importacao AT TIME ZONE 'America/Cuiaba')::int AS ano,
+              EXTRACT(MONTH FROM data_importacao AT TIME ZONE 'America/Cuiaba')::int AS mes
+         FROM dash_sesi.importacoes
+        WHERE status = 'SUCESSO'
+        ORDER BY data_importacao DESC
+        LIMIT 1`,
+    );
+    const r = res.rows[0] as { ano: number; mes: number } | undefined;
+    return r ? { ano: Number(r.ano), mes: Number(r.mes) } : null;
+  } catch (e) {
+    console.error("Falha ao ler a última importação:", e);
+    return null;
+  }
+}
+
 /** Lê a visão agregada dash_sesi.vw_fatos. */
 export async function lerFatosDoBanco(ano: number): Promise<LinhaFato[] | null> {
   const p = getPool();
