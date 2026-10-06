@@ -16,8 +16,8 @@ function dataset(segCentroCusto: Dataset["segCentroCusto"]): Dataset {
 }
 
 const comPrevisto = [
-  { nome: "CC A", grupo: "G", previsto: 1000, realizado: 0 }, // 0% < 60% da meta -> crítico
-  { nome: "CC B", grupo: "G", previsto: 2000, realizado: 2000 }, // 100% -> em dia
+  { nome: "CC A", grupo: "G", previsto: 1_500_000, realizado: 0 }, // 0% < 60% da meta -> crítico
+  { nome: "CC B", grupo: "G", previsto: 2_000_000, realizado: 2_000_000 }, // 100% -> em dia
 ];
 
 const semPrevisto = { nome: "CC sem previsto", grupo: "G", previsto: 0, realizado: 500 };
